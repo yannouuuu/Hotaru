@@ -77,7 +77,7 @@
 
 1. **🛠️ SYSTÈME** (6 salons)
 2. **💬 DISCUSSIONS** (4 salons)
-3. **🔊 SALONS VOCAUX** (5 salons + vocaux privés dynamiques)
+3. **🔊 SALONS VOCAUX** (4 salons + vocaux privés dynamiques)
 4. **📚 COURS & ENTRAIDE** (4 salons)
 5. **🎟️ SUPPORT** (1 salon + tickets dynamiques)
 6. **🛡️ MODÉRATION** (4 salons)

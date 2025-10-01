@@ -39,7 +39,6 @@
 - Compteur persistant en base de données
 
 ### 🎙️ Salons vocaux privés
-- Salon "➕ Créer un vocal privé" automatique
 - `/private-voice` - Créer manuellement
 - `/voice-invite` - Inviter quelqu'un
 - `/voice-kick` - Expulser quelqu'un

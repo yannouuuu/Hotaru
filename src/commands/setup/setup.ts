@@ -71,7 +71,7 @@ const command: Command = {
         hoist: true,
         mentionable: false,
       });
-      
+
       const roleVerified = await guild.roles.create({
         name: '✅ Vérifié',
         color: 0x00b894,
@@ -79,7 +79,21 @@ const command: Command = {
         hoist: false,
         mentionable: false,
       });
+      
+      const roleBot = await guild.roles.create({
+        name: '🤖 Bot',
+        color: 0x7289da,
+        permissions: [],
+        hoist: false,
+        mentionable: false,
+      });
 
+      // Attribuer le rôle au bot lui-même
+      try {
+        await (await guild.members.fetch(interaction.client.user.id)).roles.add(roleBot);
+      } catch (error) {
+        console.error('Erreur lors de l\'attribution du rôle Bot au bot:', error);
+      }
 
       await interaction.editReply('⏳ Configuration du serveur en cours...\n\n**Étape 2/7** : Création des catégories...');
 
@@ -621,8 +635,9 @@ const command: Command = {
           `• ${roleAdmin}\n` +
           `• ${roleDelegue}\n` +
           `• ${roleSupport}\n` +
+          `• ${roleStudent}\n` +
           `• ${roleVerified}\n` +
-          `• ${roleStudent}\n\n` +
+          `• ${roleBot}\n\n` +
           '**Catégories créées :**\n' +
           '• 🛠️ SYSTÈME\n' +
           '• 💬 DISCUSSIONS\n' +
@@ -636,8 +651,9 @@ const command: Command = {
           `ROLE_ADMIN_ID=${roleAdmin.id}\n` +
           `ROLE_DELEGUE_ID=${roleDelegue.id}\n` +
           `ROLE_SUPPORT_ID=${roleSupport.id}\n` +
+          `ROLE_STUDENT_ID=${roleStudent.id}\n` +
           `ROLE_VERIFIED_ID=${roleVerified.id}\n` +
-          `ROLE_STUDENT_ID=${roleStudent.id}\n\n` +
+          `ROLE_BOT_ID=${roleBot.id}\n\n` +
           `CHANNEL_WELCOME_ID=${channelWelcome.id}\n` +
           `CHANNEL_QUOTES_ID=${channelQuotes.id}\n` +
           `CHANNEL_VERIFY_ID=${channelVerify.id}\n` +
