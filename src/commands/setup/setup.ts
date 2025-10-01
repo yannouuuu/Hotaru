@@ -344,14 +344,7 @@ const command: Command = {
         parent: categoryVoice.id,
         userLimit: 50,
       });
-
-      const voicePrivate = await guild.channels.create({
-        name: '➕┃Créer un vocal privé',
-        type: ChannelType.GuildVoice,
-        parent: categoryVoice.id,
-        userLimit: 1,
-      });
-
+      
       await interaction.editReply('⏳ Configuration du serveur en cours...\n\n**Étape 6/7** : Création des salons de cours...');
 
       // ========== 📚 COURS & ENTRAIDE ==========
