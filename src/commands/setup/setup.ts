@@ -63,7 +63,15 @@ const command: Command = {
         hoist: true,
         mentionable: true,
       });
-
+      
+      const roleStudent = await guild.roles.create({
+        name: '🎓 Étudiant',
+        color: 0x9b59b6,
+        permissions: [],
+        hoist: true,
+        mentionable: false,
+      });
+      
       const roleVerified = await guild.roles.create({
         name: '✅ Vérifié',
         color: 0x00b894,
@@ -72,13 +80,6 @@ const command: Command = {
         mentionable: false,
       });
 
-      const roleStudent = await guild.roles.create({
-        name: '🎓 Étudiant',
-        color: 0x9b59b6,
-        permissions: [],
-        hoist: true,
-        mentionable: false,
-      });
 
       await interaction.editReply('⏳ Configuration du serveur en cours...\n\n**Étape 2/7** : Création des catégories...');
 
