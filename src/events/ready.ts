@@ -1,11 +1,15 @@
 import { Events, ActivityType } from 'discord.js';
 import type { BotClient } from '../types/index.ts';
+import { initReminderManager } from '../utils/reminderManager.ts';
 
 export default {
   name: Events.ClientReady,
   once: true,
   async execute(client: BotClient) {
     console.log(`✨ Bot connecté en tant que ${client.user?.tag}`);
+    
+    // Initialiser le gestionnaire de rappels
+    initReminderManager(client);
 
       const activities = [
       { name: '/help pour démarrer ! 🚀', type: ActivityType.Playing },

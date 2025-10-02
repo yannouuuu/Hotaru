@@ -7,6 +7,7 @@ import { handleCleanupButtons } from '../commands/setup/cleanup.ts';
 import { handleLinksMenu } from '../handlers/linksHandlers.ts';
 import { handleRoleToggle } from '../handlers/rolesHandlers.ts';
 import { handlePanelActions } from '../handlers/panelHandlers.ts';
+import { handleReminderButtons } from '../handlers/reminderHandlers.ts';
 
 export default {
   name: Events.InteractionCreate,
@@ -68,6 +69,10 @@ export default {
       // Gérer les boutons de cleanup
       else if (customId.startsWith('cleanup_')) {
         await handleCleanupButtons(interaction);
+      }
+      // Gérer les boutons de rappels
+      else if (customId.startsWith('reminder_')) {
+        await handleReminderButtons(interaction);
       }
     }
 

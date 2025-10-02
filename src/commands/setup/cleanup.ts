@@ -238,6 +238,7 @@ export const handleCleanupButtons = async (interaction: ButtonInteraction): Prom
         db.exec('DELETE FROM tickets');
         db.exec('DELETE FROM verified_users');
         db.exec('DELETE FROM photo_counter');
+        db.exec('DELETE FROM reminders');
 
         db.close();
       } catch (error) {

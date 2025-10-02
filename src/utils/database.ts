@@ -58,6 +58,22 @@ db.exec(`
   )
 `);
 
+db.exec(`
+  CREATE TABLE IF NOT EXISTS reminders (
+    id TEXT PRIMARY KEY,
+    userId TEXT NOT NULL,
+    channelId TEXT,
+    guildId TEXT,
+    message TEXT NOT NULL,
+    reminderTime INTEGER NOT NULL,
+    isPrivate INTEGER DEFAULT 0,
+    recurring TEXT,
+    originalDelay INTEGER NOT NULL,
+    createdAt INTEGER NOT NULL,
+    status TEXT DEFAULT 'active'
+  )
+`);
+
 // Fonctions pour les citations
 export const addQuote = (quote: QuoteData): void => {
   const stmt = db.prepare(
@@ -142,6 +158,103 @@ export const incrementPhotoCounter = (channelId: string): number => {
   stmt.run(channelId, newCount);
   
   return newCount;
+};
+
+// Fonctions pour les rappels
+export interface ReminderData {
+  id?: string;
+  userId: string;
+  channelId: string | null;
+  guildId: string | null;
+  message: string;
+  reminderTime: number;
+  isPrivate: boolean;
+  recurring: string | null;
+  originalDelay: number;
+  createdAt: number;
+  status: 'active' | 'completed' | 'cancelled';
+}
+
+export const createReminder = (reminder: ReminderData): string => {
+  const id = `reminder_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  const stmt = db.prepare(
+    'INSERT INTO reminders (id, userId, channelId, guildId, message, reminderTime, isPrivate, recurring, originalDelay, createdAt, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+  );
+  stmt.run(
+    id,
+    reminder.userId,
+    reminder.channelId,
+    reminder.guildId,
+    reminder.message,
+    reminder.reminderTime,
+    reminder.isPrivate ? 1 : 0,
+    reminder.recurring,
+    reminder.originalDelay,
+    reminder.createdAt,
+    reminder.status
+  );
+  return id;
+};
+
+export const getReminder = (id: string): ReminderData | undefined => {
+  const stmt = db.prepare('SELECT * FROM reminders WHERE id = ?');
+  const result = stmt.get(id) as any;
+  if (!result) return undefined;
+  return {
+    ...result,
+    isPrivate: result.isPrivate === 1
+  } as ReminderData;
+};
+
+export const getUserReminders = (userId: string, status?: 'active' | 'completed' | 'cancelled'): ReminderData[] => {
+  let stmt;
+  let results;
+  
+  if (status) {
+    stmt = db.prepare('SELECT * FROM reminders WHERE userId = ? AND status = ? ORDER BY reminderTime ASC');
+    results = stmt.all(userId, status) as any[];
+  } else {
+    stmt = db.prepare('SELECT * FROM reminders WHERE userId = ? ORDER BY reminderTime ASC');
+    results = stmt.all(userId) as any[];
+  }
+  
+  return results.map(r => ({
+    ...r,
+    isPrivate: r.isPrivate === 1
+  })) as ReminderData[];
+};
+
+export const getActiveReminders = (): ReminderData[] => {
+  const stmt = db.prepare('SELECT * FROM reminders WHERE status = ? ORDER BY reminderTime ASC');
+  const results = stmt.all('active') as any[];
+  return results.map(r => ({
+    ...r,
+    isPrivate: r.isPrivate === 1
+  })) as ReminderData[];
+};
+
+export const updateReminderStatus = (id: string, status: 'active' | 'completed' | 'cancelled'): void => {
+  const stmt = db.prepare('UPDATE reminders SET status = ? WHERE id = ?');
+  stmt.run(status, id);
+};
+
+export const cancelReminder = (id: string): boolean => {
+  const reminder = getReminder(id);
+  if (!reminder || reminder.status !== 'active') return false;
+  
+  updateReminderStatus(id, 'cancelled');
+  return true;
+};
+
+export const cancelAllUserReminders = (userId: string): number => {
+  const stmt = db.prepare('UPDATE reminders SET status = ? WHERE userId = ? AND status = ?');
+  const result = stmt.run('cancelled', userId, 'active');
+  return result.changes;
+};
+
+export const updateReminderTime = (id: string, newTime: number): void => {
+  const stmt = db.prepare('UPDATE reminders SET reminderTime = ? WHERE id = ?');
+  stmt.run(newTime, id);
 };
 
 export default db;

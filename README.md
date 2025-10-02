@@ -66,6 +66,8 @@
 
 ## 🚀 Installation rapide
 
+> **💡 Déploiement sur Heroku** : Consultez `QUICKSTART_HEROKU.md` pour déployer en production avec vos crédits GitHub Student Pack !
+
 ### 1. Prérequis
 - [Bun](https://bun.sh/) installé
 - Compte Discord Developer
@@ -190,7 +192,30 @@ Pour chaque nouveau semestre:
 5. Copier les IDs
 6. Redémarrer
 7. ✅ Prêt !
+
+## 🌐 Déploiement en production
+
+### Heroku (Recommandé avec GitHub Student Pack)
+```bash
+# Installation automatique
+.\deploy-heroku.ps1
+
+# Voir QUICKSTART_HEROKU.md pour le guide complet
 ```
+
+**Avantages** :
+- ✅ ~$13/mois de crédits gratuits avec GitHub Student Pack
+- ✅ Déploiement simple avec Git
+- ✅ Logs et monitoring intégrés
+- ✅ Parfait pour un bot Discord étudiant
+
+### Autres options
+- **Railway** - Alternative moderne à Heroku
+- **Fly.io** - Hébergement gratuit limité
+- **VPS** (DigitalOcean, Linode) - Plus de contrôle
+- **Serveur local** - Pour développement uniquement
+
+📖 Documentation complète : `HEROKU_DEPLOYMENT.md`
 
 ## 📝 Personnalisation
 
