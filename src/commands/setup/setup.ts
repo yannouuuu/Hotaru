@@ -347,6 +347,29 @@ const command: Command = {
         topic: 'Utilisez les commandes du bot ici pour éviter de polluer les autres salons',
       });
 
+      const channelPolls = await guild.channels.create({
+        name: '📊┃sondages',
+        type: ChannelType.GuildText,
+        parent: categoryDiscussions.id,
+        permissionOverwrites: [
+          {
+            id: guild.id,
+            deny: [PermissionFlagsBits.ViewChannel],
+          },
+          {
+            id: roleVerified.id,
+            allow: [
+              PermissionFlagsBits.ViewChannel, 
+              PermissionFlagsBits.SendMessages, 
+              PermissionFlagsBits.ReadMessageHistory,
+              PermissionFlagsBits.CreatePublicThreads,
+              PermissionFlagsBits.SendMessagesInThreads
+            ],
+          },
+        ],
+        topic: '📊 Créez des sondages ici ! Seuls les sondages sont autorisés. Un thread de discussion s\'ouvrira automatiquement.',
+      });
+
       await interaction.editReply('⏳ Configuration du serveur en cours...\n\n**Étape 5/7** : Création des salons vocaux...');
 
       // ========== 🔊 SALONS VOCAUX ==========
@@ -674,6 +697,7 @@ const command: Command = {
           `CHANNEL_QUOTES_ID=${channelQuotes.id}\n` +
           `CHANNEL_VERIFY_ID=${channelVerify.id}\n` +
           `CHANNEL_PICTURES_ID=${channelPictures.id}\n` +
+          `CHANNEL_POLLS_ID=${channelPolls.id}\n` +
           `CATEGORY_TICKETS_ID=${categorySupport.id}\n\n` +
           `CHANNEL_LOGS_BOTS_ID=${channelLogsBots.id}\n` +
           `CHANNEL_LOGS_MODERATION_ID=${channelLogsModeration.id}\n` +

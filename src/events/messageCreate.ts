@@ -7,6 +7,54 @@ export default {
     // Ignorer les messages des bots
     if (message.author.bot) return;
 
+    // Salon sondages - Créer automatiquement un thread et supprimer les messages non-sondages
+    if (message.channelId === process.env.CHANNEL_POLLS_ID) {
+      // Vérifier si c'est un sondage (poll)
+      if (message.poll) {
+        try {
+          // Créer automatiquement un thread de discussion
+          const pollQuestion = message.poll.question.text || 'Sondage';
+          const threadName = pollQuestion.length > 100 
+            ? `💬 ${pollQuestion.substring(0, 97)}...` 
+            : `💬 ${pollQuestion}`;
+          
+          const thread = await message.startThread({
+            name: threadName,
+            autoArchiveDuration: 1440, // 24 heures
+          });
+
+          // Message d'introduction dans le thread
+          await thread.send({
+            content: `📊 **Fil de discussion pour ce sondage**\n\nDiscutez ici des résultats et donnez votre avis ! Les votes se font directement dans le message du sondage.`,
+          });
+
+          console.log(`📊 Thread créé pour le sondage: "${pollQuestion}"`);
+        } catch (error) {
+          console.error('Erreur lors de la création du thread de sondage:', error);
+        }
+      } else {
+        // Ce n'est pas un sondage, supprimer le message
+        try {
+          await message.delete();
+          const warning = await message.channel.send({
+            content: `${message.author}, ce salon est réservé aux **sondages** uniquement ! 📊\n\nPour créer un sondage, utilisez le bouton 📊 dans la barre de saisie de Discord.`,
+          });
+          
+          // Supprimer le message d'avertissement après 8 secondes
+          setTimeout(async () => {
+            try {
+              await warning.delete();
+            } catch (error) {
+              console.error('Erreur lors de la suppression du message d\'avertissement:', error);
+            }
+          }, 8000);
+        } catch (error) {
+          console.error('Erreur lors de la suppression du message:', error);
+        }
+      }
+      return; // Ne pas continuer si on est dans le salon sondages
+    }
+
     // Salon pictures - Créer automatiquement un thread sur chaque image
     if (message.channelId === process.env.CHANNEL_PICTURES_ID) {
       // Vérifier s'il y a des images/pièces jointes
