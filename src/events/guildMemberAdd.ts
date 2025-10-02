@@ -1,14 +1,20 @@
-import { Events, GuildMember, EmbedBuilder, TextChannel } from 'discord.js';
+import { Events, GuildMember, EmbedBuilder, TextChannel, ChannelType } from 'discord.js';
 
 export default {
   name: Events.GuildMemberAdd,
   async execute(member: GuildMember) {
     // Message de bienvenue
     const welcomeChannelId = process.env.CHANNEL_WELCOME_ID;
-    if (welcomeChannelId) {
+    if (welcomeChannelId && /^\d+$/.test(welcomeChannelId)) {
       try {
-        const welcomeChannel = await member.guild.channels.fetch(welcomeChannelId) as TextChannel;
-        if (welcomeChannel?.isTextBased()) {
+        const welcomeChannel = await member.guild.channels.fetch(welcomeChannelId).catch(() => null) as TextChannel | null;
+        const targetWelcome = welcomeChannel && welcomeChannel.isTextBased()
+          ? welcomeChannel
+          : (member.guild.systemChannel && member.guild.systemChannel.type === ChannelType.GuildText
+              ? member.guild.systemChannel as TextChannel
+              : null);
+
+        if (targetWelcome) {
           const embed = new EmbedBuilder()
             .setColor(0x00b894)
             .setTitle('🎓 Bienvenue sur le serveur BUT Info Lille !')
@@ -25,7 +31,7 @@ export default {
             })
             .setTimestamp();
 
-          await welcomeChannel.send({ embeds: [embed] });
+          await targetWelcome.send({ embeds: [embed] });
         }
       } catch (error) {
         console.error('Erreur lors de l\'envoi du message de bienvenue:', error);
@@ -34,10 +40,11 @@ export default {
 
     // Log dans logs-serveur
     const logChannelId = process.env.CHANNEL_LOGS_SERVER_ID;
-    if (logChannelId) {
+    if (logChannelId && /^\d+$/.test(logChannelId)) {
       try {
-        const logChannel = await member.guild.channels.fetch(logChannelId) as TextChannel;
-        if (logChannel?.isTextBased()) {
+        const logChannel = await member.guild.channels.fetch(logChannelId).catch(() => null) as TextChannel | null;
+        const targetLog = logChannel && logChannel.isTextBased() ? logChannel : null;
+        if (targetLog) {
           const embed = new EmbedBuilder()
             .setColor(0x00b894)
             .setTitle('➕ Nouveau membre')
@@ -51,7 +58,7 @@ export default {
             .setThumbnail(member.user.displayAvatarURL())
             .setTimestamp();
 
-          await logChannel.send({ embeds: [embed] });
+          await targetLog.send({ embeds: [embed] });
         }
       } catch (error) {
         console.error('Erreur lors du log d\'arrivée:', error);
