@@ -38,13 +38,6 @@
 - Numérotation : Photo 1, Photo 2, etc.
 - Compteur persistant en base de données
 
-### 🎙️ Salons vocaux privés
-- `/private-voice` - Créer manuellement
-- `/voice-invite` - Inviter quelqu'un
-- `/voice-kick` - Expulser quelqu'un
-- `/voice-delete` - Supprimer le salon
-- Suppression automatique si vide pendant 5min
-
 ### 🎭 Sélection de rôles
 - Bouton pour obtenir le rôle Délégué
 - Système toggle (ajouter/retirer)
@@ -58,6 +51,14 @@
 - 🤖 logs-bots : Actions du bot
 - 🛡️ logs-modération : Actions de modération
 - 🗂️ logs-serveur : Événements du serveur
+
+### 🤖 Productivité & IA
+- `/ai-chat <message>` - Discute avec l'IA de manière naturelle
+- `/ai-explain <code>` - Explique un code source
+- `/ai-review <code>` - Relecture et suggestions d'amélioration
+- `/ai-gen <prompt>` - Génère un snippet de code
+- `/translate <lang> <text>` - Traduit une documentation technique
+- `/summarize <url>` - Résume un article ou documentation
 
 ### ⚙️ Setup & Maintenance
 - `/setup` - Configuration automatique complète
@@ -99,7 +100,10 @@ cp env.example .env
 DISCORD_TOKEN=votre_token
 CLIENT_ID=votre_client_id
 GUILD_ID=votre_server_id
+OPENROUTER_KEY=votre_cle_openrouter  # Optionnel : pour les commandes IA
 ```
+
+> **Note :** Pour utiliser les commandes IA (`/ai-explain`, `/ai-review`, etc.), vous devez créer un compte sur [OpenRouter](https://openrouter.ai/) et obtenir une clé API.
 
 ### 5. Lancement
 
@@ -130,12 +134,6 @@ Copiez tous les IDs générés dans votre `.env`, puis redémarrez le bot.
 - `/quote` - Ajouter une citation
 - `/quotes` - Voir les citations
 
-### Salons vocaux
-- `/private-voice` - Créer un vocal privé
-- `/voice-invite` - Inviter quelqu'un
-- `/voice-kick` - Expulser quelqu'un
-- `/voice-delete` - Supprimer le salon
-
 ### Modérateurs
 - `/kick` `/ban` `/timeout` `/warn` `/clear`
 
@@ -165,7 +163,6 @@ Copiez tous les IDs générés dans votre `.env`, puis redémarrez le bot.
 ### 🔊 SALONS VOCAUX
 - 🎙️ Vocal 1, 2, 3
 - 🏛️ Amphi (50 personnes max)
-- ➕ Créer un vocal privé (automatique)
 
 ### 📚 COURS & ENTRAIDE
 - 📝 aide-devoirs

@@ -40,20 +40,19 @@
 **Modération** (5):
 - `/kick` `/ban` `/timeout` `/warn` `/clear`
 
-**Salons vocaux** (4):
-- `/private-voice` - Créer un vocal privé
-- `/voice-invite` - Inviter
-- `/voice-kick` - Expulser
-- `/voice-delete` - Supprimer
+**Productivité & IA** (6):
+- `/ai-chat` - Discuter avec l'IA
+- `/ai-explain` - Expliquer du code
+- `/ai-review` - Relecture de code
+- `/ai-gen` - Générer du code
+- `/translate` - Traduire une documentation
+- `/summarize` - Résumer un article
 
 **Administration** (4):
 - `/setup` - Configuration automatique
 - `/cleanup` - Nettoyage complet
 - `/refresh-links` - Rafraîchir liens
 - `/refresh-ticket` - Rafraîchir tickets
-
-**Non visible** (2):
-- `/verify-email` - Ancienne méthode (intégrée)
 
 ## 📊 Structure de la base de données
 
@@ -73,11 +72,11 @@
 
 ## 🎨 Structure du serveur Discord
 
-### 6 catégories, 25+ salons
+### 6 catégories, 24+ salons
 
 1. **🛠️ SYSTÈME** (6 salons)
 2. **💬 DISCUSSIONS** (4 salons)
-3. **🔊 SALONS VOCAUX** (4 salons + vocaux privés dynamiques)
+3. **🔊 SALONS VOCAUX** (4 salons)
 4. **📚 COURS & ENTRAIDE** (4 salons)
 5. **🎟️ SUPPORT** (1 salon + tickets dynamiques)
 6. **🛡️ MODÉRATION** (4 salons)
@@ -85,7 +84,7 @@
 ## 🔐 Sécurité pour la production
 
 ### ⚠️ À NE JAMAIS commiter
-- `.env` - Contient les tokens
+- `.env` - Contient les tokens (Discord, OpenRouter)
 - `data/` - Base de données avec emails
 
 ### ✅ Bonnes pratiques
@@ -93,6 +92,14 @@
 - Limiter les accès admin
 - Surveiller les logs
 - Sauvegarder `data/` régulièrement
+- Surveiller l'utilisation de l'API OpenRouter (coûts)
+
+### 🔑 Configuration des API
+- **DISCORD_TOKEN** : Requis pour le fonctionnement du bot
+- **OPENROUTER_KEY** : Optionnel, uniquement pour les commandes IA
+  - Créez un compte sur [OpenRouter](https://openrouter.ai/)
+  - Configurez un budget mensuel pour éviter les surprises
+  - Le modèle par défaut est `anthropic/claude-3.5-sonnet`
 
 ## 📝 Notes de version
 
