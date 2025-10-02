@@ -290,7 +290,6 @@ const handleGitPull = async (interaction: ButtonInteraction) => {
   await executeGitPull(interaction);
 };
 
-// Exécuter git pull (fonction séparée pour réutilisation)
 const executeGitPull = async (interaction: ButtonInteraction) => {
   await interaction.deferReply({ ephemeral: true });
 
@@ -395,6 +394,11 @@ export const handlePanelActions = async (interaction: ButtonInteraction): Promis
     case 'git_pull_confirm':
     case 'git_pull_cancel':
       await handleGitPullConfirmation(interaction);
+      break;
+    case 'manage_channels':
+      // Import dynamique pour éviter les dépendances circulaires
+      const { handleChannelManagement } = await import('./channelManagerHandlers.ts');
+      await handleChannelManagement(interaction);
       break;
     default:
       await interaction.reply({ content: '❌ Action inconnue', ephemeral: true });

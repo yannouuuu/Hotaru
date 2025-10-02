@@ -642,6 +642,11 @@ const command: Command = {
           .setStyle(ButtonStyle.Primary)
           .setEmoji('🎭'),
         new ButtonBuilder()
+          .setCustomId('manage_channels')
+          .setLabel('Gérer les Salons')
+          .setStyle(ButtonStyle.Secondary)
+          .setEmoji('📝'),
+        new ButtonBuilder()
           .setCustomId('git_pull')
           .setLabel('Git Pull')
           .setStyle(ButtonStyle.Success)
