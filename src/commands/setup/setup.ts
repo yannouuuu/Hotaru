@@ -338,6 +338,23 @@ const command: Command = {
         topic: 'Les meilleures citations de nos profs ! Utilisez /quote pour en ajouter',
       });
 
+      const channelBotCommands = await guild.channels.create({
+        name: '🤖┃commandes',
+        type: ChannelType.GuildText,
+        parent: categoryDiscussions.id,
+        permissionOverwrites: [
+          {
+            id: guild.id,
+            deny: [PermissionFlagsBits.ViewChannel],
+          },
+          {
+            id: roleVerified.id,
+            allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory],
+          },
+        ],
+        topic: 'Utilisez les commandes du bot ici pour éviter de polluer les autres salons',
+      });
+
       await interaction.editReply('⏳ Configuration du serveur en cours...\n\n**Étape 5/7** : Création des salons vocaux...');
 
       // ========== 🔊 SALONS VOCAUX ==========
