@@ -94,6 +94,14 @@ const command: Command = {
         mentionable: false,
       });
 
+      const roleJobs = await guild.roles.create({
+        name: '💼 Jobs',
+        color: 0x2ecc71,
+        permissions: [],
+        hoist: false,
+        mentionable: false,
+      });
+
       await interaction.editReply('⏳ Configuration du serveur en cours...\n\n**Étape 2/7** : Création des catégories...');
 
       // ========== CRÉATION DES CATÉGORIES ==========
@@ -207,11 +215,12 @@ const command: Command = {
         permissionOverwrites: [
           {
             id: guild.id,
-            allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages],
+            allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory],
+            deny: [PermissionFlagsBits.SendMessages],
           },
           {
             id: roleVerified.id,
-            deny: [PermissionFlagsBits.ViewChannel], // Les vérifiés ne voient plus ce salon
+            deny: [PermissionFlagsBits.ViewChannel],
           },
         ],
         topic: 'Vérifiez votre statut d\'étudiant avec /verify',
@@ -360,11 +369,15 @@ const command: Command = {
             id: roleVerified.id,
             allow: [
               PermissionFlagsBits.ViewChannel, 
-              PermissionFlagsBits.SendMessages, 
               PermissionFlagsBits.ReadMessageHistory,
               PermissionFlagsBits.CreatePublicThreads,
               PermissionFlagsBits.SendMessagesInThreads
             ],
+            deny: [PermissionFlagsBits.SendMessages],
+          },
+          {
+            id: roleAdmin.id,
+            allow: [PermissionFlagsBits.SendMessages],
           },
         ],
         topic: '📊 Créez des sondages ici ! Seuls les sondages sont autorisés. Un thread de discussion s\'ouvrira automatiquement.',
@@ -387,7 +400,7 @@ const command: Command = {
             deny: [PermissionFlagsBits.ViewChannel],
           },
           {
-            id: roleVerified.id,
+            id: roleJobs.id,
             allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory],
             deny: [PermissionFlagsBits.SendMessages],
           },
@@ -535,7 +548,9 @@ const command: Command = {
         .setDescription(
           '**Choisissez vos rôles en cliquant sur les boutons ci-dessous :**\n\n' +
           '📋 **Délégué** - Si vous êtes délégué de votre groupe\n' +
-          '_(Vous obtiendrez des permissions de modération)_'
+          '_(Vous obtiendrez des permissions de modération)_\n\n' +
+          '💼 **Jobs** - Accédez au salon des offres d\'emploi étudiants\n' +
+          '_(Mis à jour automatiquement avec les offres de la région lilloise)_'
         )
         .setFooter({ text: 'Cliquez pour ajouter ou retirer un rôle' })
         .setTimestamp();
@@ -546,7 +561,13 @@ const command: Command = {
         .setStyle(ButtonStyle.Primary)
         .setEmoji('📋');
 
-      const rolesRow = new ActionRowBuilder<ButtonBuilder>().addComponents(delegueButton);
+      const jobsButton = new ButtonBuilder()
+        .setCustomId('toggle_jobs')
+        .setLabel('Jobs')
+        .setStyle(ButtonStyle.Success)
+        .setEmoji('💼');
+
+      const rolesRow = new ActionRowBuilder<ButtonBuilder>().addComponents(delegueButton, jobsButton);
       const rolesMessage = await channelRoles.send({ embeds: [rolesEmbed], components: [rolesRow] });
 
       // Message des liens utiles avec menu interactif
@@ -637,6 +658,11 @@ const command: Command = {
             name: '🔄 Git Pull', 
             value: 'Récupère les dernières modifications depuis GitHub\nPensez à redémarrer le bot manuellement après un pull !', 
             inline: false 
+          },
+          { 
+            name: '💼 Rafraîchir Jobs', 
+            value: 'Force la mise à jour immédiate des offres d\'emploi (sans attendre le délai de 6h)', 
+            inline: false 
           }
         )
         .setFooter({ text: 'Réservé aux administrateurs' })
@@ -678,7 +704,15 @@ const command: Command = {
           .setEmoji('🔄')
       );
 
-      await channelPanelControl.send({ embeds: [panelEmbed], components: [row1, row2] });
+      const row3 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+        new ButtonBuilder()
+          .setCustomId('refresh_jobs')
+          .setLabel('Rafraîchir Jobs')
+          .setStyle(ButtonStyle.Success)
+          .setEmoji('💼')
+      );
+
+      await channelPanelControl.send({ embeds: [panelEmbed], components: [row1, row2, row3] });
 
       // Sauvegarder les IDs des messages dans un fichier JSON
       const messageIds = {
@@ -706,6 +740,7 @@ const command: Command = {
           `• ${roleSupport}\n` +
           `• ${roleStudent}\n` +
           `• ${roleVerified}\n` +
+          `• ${roleJobs}\n` +
           `• ${roleBot}\n\n` +
           '**Catégories créées :**\n' +
           '• 🛠️ SYSTÈME\n' +
@@ -722,6 +757,7 @@ const command: Command = {
           `ROLE_SUPPORT_ID=${roleSupport.id}\n` +
           `ROLE_STUDENT_ID=${roleStudent.id}\n` +
           `ROLE_VERIFIED_ID=${roleVerified.id}\n` +
+          `ROLE_JOBS_ID=${roleJobs.id}\n` +
           `ROLE_BOT_ID=${roleBot.id}\n\n` +
           `CHANNEL_WELCOME_ID=${channelWelcome.id}\n` +
           `CHANNEL_QUOTES_ID=${channelQuotes.id}\n` +

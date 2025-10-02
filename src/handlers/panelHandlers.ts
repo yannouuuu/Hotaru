@@ -213,18 +213,26 @@ export const refreshRoles = async (interaction: ButtonInteraction) => {
       .setDescription(
         '**Choisissez vos rôles en cliquant sur les boutons ci-dessous :**\n\n' +
         '📋 **Délégué** - Si vous êtes délégué de votre groupe\n' +
-        '_(Vous obtiendrez des permissions de modération)_'
+        '_(Vous obtiendrez des permissions de modération)_\n\n' +
+        '💼 **Jobs** - Accédez au salon des offres d\'emploi étudiants\n' +
+        '_(Mis à jour automatiquement avec les offres de la région lilloise)_'
       )
       .setFooter({ text: 'Cliquez pour ajouter ou retirer un rôle' })
       .setTimestamp();
 
-    const button = new ButtonBuilder()
+    const delegueButton = new ButtonBuilder()
       .setCustomId('toggle_delegue')
       .setLabel('Délégué')
       .setStyle(ButtonStyle.Primary)
       .setEmoji('📋');
 
-    const row = new ActionRowBuilder<ButtonBuilder>().addComponents(button);
+    const jobsButton = new ButtonBuilder()
+      .setCustomId('toggle_jobs')
+      .setLabel('Jobs')
+      .setStyle(ButtonStyle.Success)
+      .setEmoji('💼');
+
+    const row = new ActionRowBuilder<ButtonBuilder>().addComponents(delegueButton, jobsButton);
 
     // Supprimer et recréer
     if (rolesConfig.messageId) {
@@ -245,6 +253,39 @@ export const refreshRoles = async (interaction: ButtonInteraction) => {
   } catch (error) {
     console.error('Erreur:', error);
     await interaction.reply({ content: '❌ Erreur lors du rafraîchissement.', ephemeral: true });
+  }
+};
+
+// Rafraîchir les offres d'emploi
+export const refreshJobs = async (interaction: ButtonInteraction) => {
+  await interaction.deferReply({ ephemeral: true });
+
+  try {
+    const { JobsManager } = await import('../utils/jobsManager.ts');
+    const jobsManager = new JobsManager(interaction.client);
+
+    if (!jobsManager['jobsService'].isConfigured()) {
+      await interaction.editReply({
+        content: '❌ L\'API France Travail n\'est pas configurée.\n\n' +
+                 'Ajoutez ces variables dans votre fichier `.env` :\n' +
+                 '```env\n' +
+                 'FRANCE_TRAVAIL_CLIENT_ID=votre_client_id\n' +
+                 'FRANCE_TRAVAIL_CLIENT_SECRET=votre_client_secret\n' +
+                 'CHANNEL_JOBS_ID=id_du_canal_jobs\n' +
+                 '```\n' +
+                 'Pour obtenir vos identifiants, inscrivez-vous sur https://francetravail.io/',
+      });
+      return;
+    }
+
+    await interaction.editReply('🔄 Recherche de nouvelles offres d\'emploi en cours...');
+    
+    await jobsManager.postNewJobs();
+    
+    await interaction.editReply('✅ Mise à jour des offres d\'emploi terminée !');
+  } catch (error) {
+    console.error('Erreur lors du refresh des jobs:', error);
+    await interaction.editReply('❌ Une erreur est survenue lors de la mise à jour des offres.');
   }
 };
 
@@ -387,6 +428,9 @@ export const handlePanelActions = async (interaction: ButtonInteraction): Promis
       break;
     case 'refresh_roles':
       await refreshRoles(interaction);
+      break;
+    case 'refresh_jobs':
+      await refreshJobs(interaction);
       break;
     case 'git_pull':
       await handleGitPull(interaction);
