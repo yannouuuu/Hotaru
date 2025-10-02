@@ -7,32 +7,10 @@ export default {
     // Ignorer les messages des bots
     if (message.author.bot) return;
 
-    // Salon sondages - Créer automatiquement un thread et supprimer les messages non-sondages
+    // Salon sondages - Supprimer les messages non-sondages
     if (message.channelId === process.env.CHANNEL_POLLS_ID) {
       // Vérifier si c'est un sondage (poll)
-      if (message.poll) {
-        try {
-          // Créer automatiquement un thread de discussion
-          const pollQuestion = message.poll.question.text || 'Sondage';
-          const threadName = pollQuestion.length > 100 
-            ? `💬 ${pollQuestion.substring(0, 97)}...` 
-            : `💬 ${pollQuestion}`;
-          
-          const thread = await message.startThread({
-            name: threadName,
-            autoArchiveDuration: 1440, // 24 heures
-          });
-
-          // Message d'introduction dans le thread
-          await thread.send({
-            content: `📊 **Fil de discussion pour ce sondage**\n\nDiscutez ici des résultats et donnez votre avis ! Les votes se font directement dans le message du sondage.`,
-          });
-
-          console.log(`📊 Thread créé pour le sondage: "${pollQuestion}"`);
-        } catch (error) {
-          console.error('Erreur lors de la création du thread de sondage:', error);
-        }
-      } else {
+      if (!message.poll) {
         // Ce n'est pas un sondage, supprimer le message
         try {
           await message.delete();

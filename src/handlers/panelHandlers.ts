@@ -252,17 +252,31 @@ const refreshRoles = async (interaction: ButtonInteraction) => {
 const handleGitPull = async (interaction: ButtonInteraction) => {
   await interaction.deferReply({ ephemeral: true });
 
+  // Détecter si on est sur Heroku (via la variable d'environnement DYNO)
+  const isHeroku = process.env.DYNO !== undefined;
+
   try {
     const { stdout, stderr } = await execAsync('git pull');
     
     const embed = new EmbedBuilder()
-      .setColor(0x00b894)
+      .setColor(isHeroku ? 0xe67e22 : 0x00b894)
       .setTitle('🔄 Git Pull')
       .setDescription('**Résultat de la commande `git pull` :**')
-      .addFields(
-        { name: 'Sortie', value: `\`\`\`\n${stdout || 'Aucune sortie'}\n\`\`\``, inline: false }
-      )
       .setTimestamp();
+
+    // Warning si Heroku
+    if (isHeroku) {
+      embed.addFields({
+        name: '⚠️ Environnement Heroku détecté',
+        value: 'Cette commande ne fonctionnera probablement pas sur Heroku (git non installé).\n' +
+               'Pour mettre à jour : `git push heroku main`',
+        inline: false
+      });
+    }
+
+    embed.addFields(
+      { name: 'Sortie', value: `\`\`\`\n${stdout || 'Aucune sortie'}\n\`\`\``, inline: false }
+    );
 
     if (stderr) {
       embed.addFields({ name: 'Erreurs', value: `\`\`\`\n${stderr}\n\`\`\``, inline: false });
@@ -281,11 +295,29 @@ const handleGitPull = async (interaction: ButtonInteraction) => {
         ephemeral: true 
       });
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Erreur git pull:', error);
-    await interaction.editReply({ 
-      content: `❌ Erreur lors du git pull.\n\`\`\`\n${error}\n\`\`\``,
-    });
+    
+    const errorEmbed = new EmbedBuilder()
+      .setColor(0xe74c3c)
+      .setTitle('❌ Erreur Git Pull')
+      .setTimestamp();
+
+    // Message personnalisé selon l'environnement
+    if (isHeroku) {
+      errorEmbed.setDescription(
+        '**⚠️ Cette commande ne fonctionne pas sur Heroku**\n\n' +
+        'Git n\'est pas installé dans l\'environnement Heroku.\n\n' +
+        '**Pour mettre à jour le bot :**\n' +
+        '1. Poussez vos changements sur GitHub\n' +
+        '2. Exécutez `git push heroku main`\n' +
+        '3. Le bot redémarrera automatiquement avec les changements'
+      );
+    } else {
+      errorEmbed.setDescription(`**Erreur :**\n\`\`\`\n${error}\n\`\`\``);
+    }
+
+    await interaction.editReply({ embeds: [errorEmbed] });
   }
 };
 
