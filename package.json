@@ -3,6 +3,9 @@
   "module": "index.ts",
   "type": "module",
   "private": true,
+  "engines": {
+    "node": ">=18.x"
+  },
   "devDependencies": {
     "@types/bun": "latest"
   },
@@ -13,10 +16,12 @@
     "@discordjs/rest": "^2.6.0",
     "discord-api-types": "^0.38.26",
     "discord.js": "^14.22.1",
-    "dotenv": "^17.2.3"
+    "dotenv": "^17.2.3",
+    "tsx": "^4.7.0"
   },
   "scripts": {
     "dev": "bun --watch src/index.ts",
-    "start": "bun src/index.ts"
+    "dev:node": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts"
   }
 }
