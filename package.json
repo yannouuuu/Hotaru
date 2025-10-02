@@ -22,6 +22,6 @@
   "scripts": {
     "dev": "bun --watch src/index.ts",
     "dev:node": "tsx watch src/index.ts",
-    "start": "tsx src/index.ts"
+    "start": "tsx --tsconfig tsconfig.json src/index.ts"
   }
 }
