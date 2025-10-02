@@ -9,7 +9,7 @@
  */
 
 import type { QuoteData, TicketData } from '../types/index.ts';
-import { Database } from 'bun:sqlite';
+import Database from 'better-sqlite3';
 import { existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
 

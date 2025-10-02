@@ -10,7 +10,7 @@ import {
   ChannelType
 } from 'discord.js';
 import type { Command } from '../../types/index.ts';
-import { Database } from 'bun:sqlite';
+import Database from 'better-sqlite3';
 import { join } from 'path';
 
 const command: Command = {
