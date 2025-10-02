@@ -81,12 +81,19 @@ const command: Command = {
       });
       
       const roleBot = await guild.roles.create({
-        name: '🤖 Bot',
+        name: '🤖 Hotaru',
         color: 0x7289da,
         permissions: [],
-        hoist: false,
+        hoist: true, 
         mentionable: false,
       });
+
+      try {
+        const highestPosition = Math.max(roleAdmin.position, roleDelegue.position, roleSupport.position) + 1;
+        await roleBot.setPosition(highestPosition);
+      } catch (err) {
+        console.error('Erreur lors du repositionnement du rôle Bot:', err);
+      }
 
       // Attribuer le rôle au bot lui-même
       try {

@@ -16,7 +16,7 @@ export const handleVerifyModal = async (
   if (!emailRegex.test(email)) {
     await interaction.reply({
       content: `❌ L'email doit être au format \`prenom.nom@${universityDomain}\``,
-      ephemeral: true,
+      flags: 64,
     });
     return;
   }
@@ -30,7 +30,7 @@ export const handleVerifyModal = async (
     if (!member) {
       await interaction.reply({
         content: '❌ Erreur: Membre introuvable.',
-        ephemeral: true,
+        flags: 64,
       });
       return;
     }
@@ -54,9 +54,23 @@ export const handleVerifyModal = async (
 
     // Extraire le nom depuis l'email et renommer l'utilisateur
     const parsedName = parseEmailToName(email);
+    let nicknameUpdated = false;
+    
     if (parsedName) {
       try {
-        await member.setNickname(parsedName);
+        // Vérifier si le bot a les permissions nécessaires
+        const botMember = await interaction.guild?.members.fetch(client.user!.id);
+        if (botMember && botMember.permissions.has('ManageNicknames')) {
+          // Vérifier si le bot est assez haut dans la hiérarchie
+          if (botMember.roles.highest.position > member.roles.highest.position) {
+            await member.setNickname(parsedName);
+            nicknameUpdated = true;
+          } else {
+            console.log(`⚠️ Le rôle du bot est trop bas pour renommer ${member.user.tag}`);
+          }
+        } else {
+          console.log('⚠️ Le bot n\'a pas la permission "Gérer les pseudos"');
+        }
       } catch (error) {
         console.error('Erreur lors du renommage:', error);
       }
@@ -80,19 +94,20 @@ export const handleVerifyModal = async (
         `Bienvenue ${interaction.user} !\n\n` +
         `Ton compte a été vérifié avec succès avec l'email **${email}**.\n\n` +
         `🎓 **Rôles attribués** : Vérifié + Étudiant\n` +
-        (parsedName ? `✏️ **Pseudo mis à jour** : ${parsedName}\n\n` : '\n') +
+        (nicknameUpdated ? `✏️ **Pseudo mis à jour** : ${parsedName}\n\n` : 
+         parsedName ? `⚠️ **Pseudo suggéré** : ${parsedName} (renommage automatique impossible)\n\n` : '\n') +
         `Tu as maintenant accès à tous les salons du serveur ! 🎉\n\n` +
         `Le salon de vérification va disparaître de ta vue.`
       )
       .setThumbnail(interaction.user.displayAvatarURL())
       .setTimestamp();
 
-    await interaction.reply({ embeds: [successEmbed], ephemeral: true });
+    await interaction.reply({ embeds: [successEmbed], flags: 64 });
   } catch (error) {
     console.error('Erreur lors de la vérification:', error);
     await interaction.reply({
       content: '❌ Une erreur est survenue lors de la vérification.',
-      ephemeral: true,
+      flags: 64,
     });
   }
 };
