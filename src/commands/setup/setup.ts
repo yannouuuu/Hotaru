@@ -370,6 +370,31 @@ const command: Command = {
         topic: '📊 Créez des sondages ici ! Seuls les sondages sont autorisés. Un thread de discussion s\'ouvrira automatiquement.',
       });
 
+      const channelMemes = await guild.channels.create({
+        name: '😂┃memes',
+        type: ChannelType.GuildText,
+        parent: categoryDiscussions.id,
+        topic: 'Partagez vos memes et délires ! 🤣',
+      });
+
+      const channelJobs = await guild.channels.create({
+        name: '💼┃jobs',
+        type: ChannelType.GuildText,
+        parent: categoryDiscussions.id,
+        permissionOverwrites: [
+          {
+            id: guild.id,
+            deny: [PermissionFlagsBits.ViewChannel],
+          },
+          {
+            id: roleVerified.id,
+            allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory],
+            deny: [PermissionFlagsBits.SendMessages],
+          },
+        ],
+        topic: '💼 Offres d\'emploi étudiants à Lille - Mis à jour automatiquement',
+      });
+
       await interaction.editReply('⏳ Configuration du serveur en cours...\n\n**Étape 5/7** : Création des salons vocaux...');
 
       // ========== 🔊 SALONS VOCAUX ==========
@@ -703,6 +728,7 @@ const command: Command = {
           `CHANNEL_VERIFY_ID=${channelVerify.id}\n` +
           `CHANNEL_PICTURES_ID=${channelPictures.id}\n` +
           `CHANNEL_POLLS_ID=${channelPolls.id}\n` +
+          `CHANNEL_JOBS_ID=${channelJobs.id}\n` +
           `CATEGORY_TICKETS_ID=${categorySupport.id}\n\n` +
           `CHANNEL_LOGS_BOTS_ID=${channelLogsBots.id}\n` +
           `CHANNEL_LOGS_MODERATION_ID=${channelLogsModeration.id}\n` +

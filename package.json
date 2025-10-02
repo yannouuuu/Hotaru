@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@discordjs/rest": "^2.6.0",
+    "axios": "^1.7.2",
     "better-sqlite3": "^11.0.0",
     "discord-api-types": "^0.38.26",
     "discord.js": "^14.22.1",

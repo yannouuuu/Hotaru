@@ -1,6 +1,7 @@
 import { Events, ActivityType } from 'discord.js';
 import type { BotClient } from '../types/index.ts';
 import { initReminderManager } from '../utils/reminderManager.ts';
+import { JobsManager } from '../utils/jobsManager.ts';
 
 export default {
   name: Events.ClientReady,
@@ -10,6 +11,10 @@ export default {
     
     // Initialiser le gestionnaire de rappels
     initReminderManager(client);
+
+    // Initialiser le gestionnaire d'offres d'emploi
+    const jobsManager = new JobsManager(client);
+    jobsManager.startAutoUpdate(6); // Vérifier toutes les 6 heures
 
       const activities = [
       { name: '/help pour démarrer ! 🚀', type: ActivityType.Playing },
