@@ -16,7 +16,7 @@ const loadPanelConfig = (): any => {
 };
 
 // Rafraîchir le message de support
-const refreshSupport = async (interaction: ButtonInteraction) => {
+export const refreshSupport = async (interaction: ButtonInteraction) => {
   const config = loadPanelConfig();
   const supportConfig = config.support;
   
@@ -72,7 +72,7 @@ const refreshSupport = async (interaction: ButtonInteraction) => {
 };
 
 // Rafraîchir le message des liens
-const refreshLinks = async (interaction: ButtonInteraction) => {
+export const refreshLinks = async (interaction: ButtonInteraction) => {
   const config = loadPanelConfig();
   const linksConfig = config.links;
   
@@ -150,7 +150,7 @@ const refreshLinks = async (interaction: ButtonInteraction) => {
 };
 
 // Rafraîchir le message de vérification
-const refreshVerify = async (interaction: ButtonInteraction) => {
+export const refreshVerify = async (interaction: ButtonInteraction) => {
   const config = loadPanelConfig();
   const verifyConfig = config.verify;
   
@@ -195,7 +195,7 @@ const refreshVerify = async (interaction: ButtonInteraction) => {
 };
 
 // Rafraîchir le message des rôles
-const refreshRoles = async (interaction: ButtonInteraction) => {
+export const refreshRoles = async (interaction: ButtonInteraction) => {
   const config = loadPanelConfig();
   const rolesConfig = config.roles;
   

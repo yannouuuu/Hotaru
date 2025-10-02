@@ -1,74 +1,57 @@
 import {
   ButtonInteraction,
   StringSelectMenuInteraction,
-  ModalSubmitInteraction,
   EmbedBuilder,
   ActionRowBuilder,
   StringSelectMenuBuilder,
   StringSelectMenuOptionBuilder,
-  ModalBuilder,
-  TextInputBuilder,
-  TextInputStyle,
-  ChannelType,
-  PermissionFlagsBits,
+  ButtonBuilder,
+  ButtonStyle,
 } from 'discord.js';
+import { refreshSupport } from './panelHandlers.ts';
+import { refreshLinks } from './panelHandlers.ts';
+import { refreshVerify } from './panelHandlers.ts';
+import { refreshRoles } from './panelHandlers.ts';
+import { readFileSync, writeFileSync } from 'fs';
+import { join } from 'path';
 
 // Handler principal pour la gestion des salons
 export const handleChannelManagement = async (interaction: ButtonInteraction) => {
   const embed = new EmbedBuilder()
     .setColor(0x3498db)
-    .setTitle('📝 Gestion des Salons')
+    .setTitle('🔄 Rafraîchir les Salons')
     .setDescription(
-      '**Créez un nouveau salon personnalisé**\n\n' +
-      'Sélectionnez un type de salon dans le menu ci-dessous.\n' +
-      'Vous pourrez ensuite personnaliser le nom et les options.'
+      '**Rafraîchir un salon individuellement**\n\n' +
+      'Sélectionnez le salon que vous souhaitez recréer.\n' +
+      'Cela supprimera l\'ancien et le recréera avec le code actuel.\n\n' +
+      '⚠️ **Attention :** Les messages seront perdus (sauf messages du panel)'
     )
     .setTimestamp();
 
   const selectMenu = new StringSelectMenuBuilder()
-    .setCustomId('channel_type_select')
-    .setPlaceholder('Choisissez un type de salon')
+    .setCustomId('channel_refresh_select')
+    .setPlaceholder('Choisissez un salon à rafraîchir')
     .addOptions([
       new StringSelectMenuOptionBuilder()
-        .setLabel('💬 Discussion générale')
-        .setDescription('Salon de discussion pour tous les étudiants vérifiés')
-        .setValue('discussion')
-        .setEmoji('💬'),
+        .setLabel('🎟️ Support')
+        .setDescription('Salon avec le système de tickets')
+        .setValue('support')
+        .setEmoji('🎟️'),
       new StringSelectMenuOptionBuilder()
-        .setLabel('📢 Annonces')
-        .setDescription('Salon d\'annonces importantes (lecture seule)')
-        .setValue('announcements')
-        .setEmoji('📢'),
+        .setLabel('🔗 Liens Utiles')
+        .setDescription('Salon avec le menu de liens')
+        .setValue('links')
+        .setEmoji('🔗'),
       new StringSelectMenuOptionBuilder()
-        .setLabel('📊 Sondages')
-        .setDescription('Salon dédié aux sondages uniquement')
-        .setValue('polls')
-        .setEmoji('📊'),
+        .setLabel('✅ Vérification')
+        .setDescription('Salon de vérification des étudiants')
+        .setValue('verify')
+        .setEmoji('✅'),
       new StringSelectMenuOptionBuilder()
-        .setLabel('📸 Photos')
-        .setDescription('Salon pour partager des photos uniquement')
-        .setValue('pictures')
-        .setEmoji('📸'),
-      new StringSelectMenuOptionBuilder()
-        .setLabel('📚 Cours & Entraide')
-        .setDescription('Salon d\'entraide pour une matière spécifique')
-        .setValue('course')
-        .setEmoji('📚'),
-      new StringSelectMenuOptionBuilder()
-        .setLabel('🔊 Salon vocal')
-        .setDescription('Salon vocal pour discussions audio')
-        .setValue('voice')
-        .setEmoji('🔊'),
-      new StringSelectMenuOptionBuilder()
-        .setLabel('🎮 Jeux & Détente')
-        .setDescription('Salon de détente et jeux')
-        .setValue('gaming')
-        .setEmoji('🎮'),
-      new StringSelectMenuOptionBuilder()
-        .setLabel('🛠️ Personnalisé')
-        .setDescription('Créer un salon avec des permissions personnalisées')
-        .setValue('custom')
-        .setEmoji('🛠️'),
+        .setLabel('🎭 Rôles')
+        .setDescription('Salon de sélection des rôles')
+        .setValue('roles')
+        .setEmoji('🎭'),
     ]);
 
   const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectMenu);
@@ -80,8 +63,8 @@ export const handleChannelManagement = async (interaction: ButtonInteraction) =>
   });
 };
 
-// Handler pour la sélection du type de salon
-export const handleChannelTypeSelect = async (interaction: StringSelectMenuInteraction) => {
+// Handler pour la sélection du salon à rafraîchir
+export const handleChannelRefreshSelect = async (interaction: StringSelectMenuInteraction) => {
   const channelType = interaction.values[0];
   
   if (!channelType) {
@@ -89,375 +72,104 @@ export const handleChannelTypeSelect = async (interaction: StringSelectMenuInter
     return;
   }
 
-  // Créer un modal pour personnaliser le salon
-  const modal = new ModalBuilder()
-    .setCustomId(`channel_create_modal_${channelType}`)
-    .setTitle('Créer un nouveau salon');
+  // Demander confirmation avant de supprimer
+  const confirmEmbed = new EmbedBuilder()
+    .setColor(0xe67e22)
+    .setTitle('⚠️ Confirmation de rafraîchissement')
+    .setDescription(
+      `Vous êtes sur le point de rafraîchir le salon **${getChannelLabel(channelType)}**.\n\n` +
+      '**Ce qui va se passer :**\n' +
+      '• L\'ancien salon sera supprimé\n' +
+      '• Un nouveau salon sera créé avec le code actuel\n' +
+      '• Le message principal sera recréé\n' +
+      '• Les anciens messages seront perdus\n\n' +
+      '⚠️ Voulez-vous continuer ?'
+    )
+    .setTimestamp();
 
-  const nameInput = new TextInputBuilder()
-    .setCustomId('channel_name')
-    .setLabel('Nom du salon')
-    .setStyle(TextInputStyle.Short)
-    .setPlaceholder(getPlaceholderName(channelType))
-    .setRequired(true)
-    .setMaxLength(100);
+  const confirmButton = new ButtonBuilder()
+    .setCustomId(`confirm_refresh_${channelType}`)
+    .setLabel('Rafraîchir')
+    .setStyle(ButtonStyle.Danger)
+    .setEmoji('🔄');
 
-  const descriptionInput = new TextInputBuilder()
-    .setCustomId('channel_description')
-    .setLabel('Description du salon (topic)')
-    .setStyle(TextInputStyle.Paragraph)
-    .setPlaceholder('Description qui apparaîtra en haut du salon...')
-    .setRequired(false)
-    .setMaxLength(1024);
+  const cancelButton = new ButtonBuilder()
+    .setCustomId('cancel_refresh')
+    .setLabel('Annuler')
+    .setStyle(ButtonStyle.Secondary);
 
-  const categoryInput = new TextInputBuilder()
-    .setCustomId('channel_category')
-    .setLabel('Nom de la catégorie (optionnel)')
-    .setStyle(TextInputStyle.Short)
-    .setPlaceholder('Laissez vide pour catégorie par défaut')
-    .setRequired(false)
-    .setMaxLength(100);
+  const row = new ActionRowBuilder<ButtonBuilder>().addComponents(cancelButton, confirmButton);
 
-  const row1 = new ActionRowBuilder<TextInputBuilder>().addComponents(nameInput);
-  const row2 = new ActionRowBuilder<TextInputBuilder>().addComponents(descriptionInput);
-  const row3 = new ActionRowBuilder<TextInputBuilder>().addComponents(categoryInput);
-
-  modal.addComponents(row1, row2, row3);
-
-  await interaction.showModal(modal);
+  await interaction.update({
+    embeds: [confirmEmbed],
+    components: [row],
+  });
 };
 
-// Handler pour la soumission du modal
-export const handleChannelCreateModal = async (interaction: ModalSubmitInteraction) => {
-  await interaction.deferReply({ ephemeral: true });
+// Handler pour la confirmation du rafraîchissement
+export const handleChannelRefreshConfirm = async (interaction: ButtonInteraction) => {
+  const channelType = interaction.customId.replace('confirm_refresh_', '');
 
-  const channelType = interaction.customId.replace('channel_create_modal_', '');
-  const channelName = interaction.fields.getTextInputValue('channel_name');
-  const channelDescription = interaction.fields.getTextInputValue('channel_description') || '';
-  const categoryName = interaction.fields.getTextInputValue('channel_category') || '';
+  if (channelType === 'cancel_refresh' || interaction.customId === 'cancel_refresh') {
+    await interaction.update({
+      content: '❌ Rafraîchissement annulé.',
+      embeds: [],
+      components: [],
+    });
+    return;
+  }
+
+  await interaction.update({
+    content: '🔄 Rafraîchissement en cours...',
+    embeds: [],
+    components: [],
+  });
 
   try {
-    const guild = interaction.guild;
-    if (!guild) {
-      await interaction.editReply({ content: '❌ Erreur : serveur introuvable.' });
-      return;
-    }
-
-    // Trouver ou créer la catégorie
-    let category = null;
-    if (categoryName) {
-      category = guild.channels.cache.find(
-        (c) => c.type === ChannelType.GuildCategory && c.name.toLowerCase() === categoryName.toLowerCase()
-      );
-
-      if (!category) {
-        category = await guild.channels.create({
-          name: categoryName,
-          type: ChannelType.GuildCategory,
+    // Utiliser les fonctions de refresh existantes
+    switch (channelType) {
+      case 'support':
+        await refreshSupport(interaction);
+        break;
+      case 'links':
+        await refreshLinks(interaction);
+        break;
+      case 'verify':
+        await refreshVerify(interaction);
+        break;
+      case 'roles':
+        await refreshRoles(interaction);
+        break;
+      default:
+        await interaction.followUp({
+          content: '❌ Type de salon non supporté pour le rafraîchissement automatique.',
+          ephemeral: true,
         });
-      }
-    } else {
-      // Catégorie par défaut selon le type
-      const defaultCategory = getDefaultCategory(channelType);
-      category = guild.channels.cache.find(
-        (c) => c.type === ChannelType.GuildCategory && c.name === defaultCategory
-      );
-    }
-
-    // Récupérer les rôles
-    const roleVerified = guild.roles.cache.get(process.env.ROLE_VERIFIED_ID || '');
-    const roleStudent = guild.roles.cache.get(process.env.ROLE_STUDENT_ID || '');
-    const roleDelegue = guild.roles.cache.get(process.env.ROLE_DELEGUE_ID || '');
-
-    // Créer le salon avec les bonnes permissions
-    const channelOptions = getChannelOptions(
-      channelType,
-      channelName,
-      channelDescription,
-      category?.id,
-      guild,
-      roleVerified,
-      roleStudent,
-      roleDelegue
-    );
-
-    const newChannel = await guild.channels.create(channelOptions);
-
-    // Embed de confirmation
-    const confirmEmbed = new EmbedBuilder()
-      .setColor(0x00b894)
-      .setTitle('✅ Salon créé avec succès !')
-      .setDescription(`Le salon ${newChannel} a été créé.`)
-      .addFields(
-        { name: 'Type', value: getChannelTypeLabel(channelType), inline: true },
-        { name: 'Catégorie', value: category?.name || 'Aucune', inline: true },
-        { name: 'Nom', value: channelName, inline: false }
-      )
-      .setTimestamp();
-
-    if (channelDescription) {
-      confirmEmbed.addFields({ name: 'Description', value: channelDescription, inline: false });
-    }
-
-    await interaction.editReply({ embeds: [confirmEmbed] });
-
-    // Log dans le salon de logs si disponible
-    const logsChannel = guild.channels.cache.get(process.env.CHANNEL_LOGS_SERVER_ID || '');
-    if (logsChannel && logsChannel.isTextBased()) {
-      const logEmbed = new EmbedBuilder()
-        .setColor(0x3498db)
-        .setTitle('📝 Nouveau salon créé')
-        .setDescription(`${interaction.user} a créé un nouveau salon`)
-        .addFields(
-          { name: 'Salon', value: `${newChannel} (${newChannel.id})`, inline: false },
-          { name: 'Type', value: getChannelTypeLabel(channelType), inline: true },
-          { name: 'Catégorie', value: category?.name || 'Aucune', inline: true }
-        )
-        .setTimestamp();
-
-      await logsChannel.send({ embeds: [logEmbed] });
     }
   } catch (error) {
-    console.error('Erreur lors de la création du salon:', error);
-    await interaction.editReply({
-      content: '❌ Une erreur est survenue lors de la création du salon.',
+    console.error('Erreur lors du rafraîchissement:', error);
+    await interaction.followUp({
+      content: '❌ Une erreur est survenue lors du rafraîchissement du salon.',
+      ephemeral: true,
     });
   }
 };
 
-// Fonction helper pour obtenir un nom d'exemple
-function getPlaceholderName(type: string): string {
-  const placeholders: Record<string, string> = {
-    discussion: '💬┃discussion-générale',
-    announcements: '📢┃annonces',
-    polls: '📊┃sondages',
-    pictures: '📸┃galerie-photos',
-    course: '📚┃mathématiques',
-    voice: '🔊┃Salon Vocal',
-    gaming: '🎮┃détente',
-    custom: '🛠️┃mon-salon',
-  };
-  return placeholders[type] || '📝┃nouveau-salon';
-}
-
-// Fonction helper pour obtenir la catégorie par défaut
-function getDefaultCategory(type: string): string {
-  const categories: Record<string, string> = {
-    discussion: '💬 DISCUSSIONS',
-    announcements: '🛠️ SYSTÈME',
-    polls: '💬 DISCUSSIONS',
-    pictures: '💬 DISCUSSIONS',
-    course: '📚 COURS & ENTRAIDE',
-    voice: '🔊 SALONS VOCAUX',
-    gaming: '💬 DISCUSSIONS',
-    custom: '💬 DISCUSSIONS',
-  };
-  return categories[type] || '💬 DISCUSSIONS';
-}
-
-// Fonction helper pour obtenir le label du type
-function getChannelTypeLabel(type: string): string {
+// Fonction helper pour obtenir le label du salon
+function getChannelLabel(type: string): string {
   const labels: Record<string, string> = {
-    discussion: '💬 Discussion générale',
-    announcements: '📢 Annonces',
-    polls: '📊 Sondages',
+    support: '🎟️ Support',
+    links: '🔗 Liens Utiles',
+    verify: '✅ Vérification',
+    roles: '🎭 Rôles',
+    welcome: '👋 Bienvenue',
+    quotes: '💬 Citations',
     pictures: '📸 Photos',
-    course: '📚 Cours & Entraide',
-    voice: '🔊 Salon vocal',
-    gaming: '🎮 Jeux & Détente',
-    custom: '🛠️ Personnalisé',
+    polls: '📊 Sondages',
+    logs_bots: '🤖 Logs Bots',
+    logs_moderation: '🛡️ Logs Modération',
+    logs_server: '📋 Logs Serveur',
+    panel: '⚙️ Panel Contrôle',
   };
-  return labels[type] || '📝 Salon personnalisé';
+  return labels[type] || '📝 Salon';
 }
-
-// Fonction helper pour obtenir les options de création du salon
-function getChannelOptions(
-  type: string,
-  name: string,
-  description: string,
-  categoryId: string | undefined,
-  guild: any,
-  roleVerified: any,
-  roleStudent: any,
-  roleDelegue: any
-): any {
-  const baseOptions: any = {
-    name,
-    parent: categoryId,
-  };
-
-  if (description) {
-    baseOptions.topic = description;
-  }
-
-  // Permissions par défaut pour tous les types
-  const defaultPermissions = [
-    {
-      id: guild.id,
-      deny: [PermissionFlagsBits.ViewChannel],
-    },
-    {
-      id: roleVerified?.id || guild.id,
-      allow: [
-        PermissionFlagsBits.ViewChannel,
-        PermissionFlagsBits.ReadMessageHistory,
-      ],
-    },
-  ];
-
-  switch (type) {
-    case 'discussion':
-      return {
-        ...baseOptions,
-        type: ChannelType.GuildText,
-        permissionOverwrites: [
-          ...defaultPermissions,
-          {
-            id: roleVerified?.id || guild.id,
-            allow: [
-              PermissionFlagsBits.ViewChannel,
-              PermissionFlagsBits.SendMessages,
-              PermissionFlagsBits.ReadMessageHistory,
-              PermissionFlagsBits.AddReactions,
-              PermissionFlagsBits.EmbedLinks,
-              PermissionFlagsBits.AttachFiles,
-            ],
-          },
-        ],
-      };
-
-    case 'announcements':
-      return {
-        ...baseOptions,
-        type: ChannelType.GuildAnnouncement,
-        permissionOverwrites: [
-          ...defaultPermissions,
-          {
-            id: roleVerified?.id || guild.id,
-            allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory],
-            deny: [PermissionFlagsBits.SendMessages],
-          },
-          {
-            id: roleDelegue?.id || guild.id,
-            allow: [
-              PermissionFlagsBits.ViewChannel,
-              PermissionFlagsBits.SendMessages,
-              PermissionFlagsBits.ReadMessageHistory,
-            ],
-          },
-        ],
-      };
-
-    case 'polls':
-      return {
-        ...baseOptions,
-        type: ChannelType.GuildText,
-        permissionOverwrites: [
-          ...defaultPermissions,
-          {
-            id: roleVerified?.id || guild.id,
-            allow: [
-              PermissionFlagsBits.ViewChannel,
-              PermissionFlagsBits.SendMessages,
-              PermissionFlagsBits.ReadMessageHistory,
-              PermissionFlagsBits.CreatePublicThreads,
-              PermissionFlagsBits.SendMessagesInThreads,
-            ],
-          },
-        ],
-      };
-
-    case 'pictures':
-      return {
-        ...baseOptions,
-        type: ChannelType.GuildText,
-        permissionOverwrites: [
-          ...defaultPermissions,
-          {
-            id: roleVerified?.id || guild.id,
-            allow: [
-              PermissionFlagsBits.ViewChannel,
-              PermissionFlagsBits.SendMessages,
-              PermissionFlagsBits.ReadMessageHistory,
-              PermissionFlagsBits.AttachFiles,
-              PermissionFlagsBits.EmbedLinks,
-              PermissionFlagsBits.AddReactions,
-            ],
-          },
-        ],
-      };
-
-    case 'course':
-      return {
-        ...baseOptions,
-        type: ChannelType.GuildText,
-        permissionOverwrites: [
-          ...defaultPermissions,
-          {
-            id: roleVerified?.id || guild.id,
-            allow: [
-              PermissionFlagsBits.ViewChannel,
-              PermissionFlagsBits.SendMessages,
-              PermissionFlagsBits.ReadMessageHistory,
-              PermissionFlagsBits.AttachFiles,
-              PermissionFlagsBits.EmbedLinks,
-              PermissionFlagsBits.CreatePublicThreads,
-              PermissionFlagsBits.SendMessagesInThreads,
-            ],
-          },
-        ],
-      };
-
-    case 'voice':
-      return {
-        ...baseOptions,
-        type: ChannelType.GuildVoice,
-        permissionOverwrites: [
-          {
-            id: guild.id,
-            deny: [PermissionFlagsBits.ViewChannel],
-          },
-          {
-            id: roleVerified?.id || guild.id,
-            allow: [
-              PermissionFlagsBits.ViewChannel,
-              PermissionFlagsBits.Connect,
-              PermissionFlagsBits.Speak,
-              PermissionFlagsBits.Stream,
-              PermissionFlagsBits.UseVAD,
-            ],
-          },
-        ],
-      };
-
-    case 'gaming':
-      return {
-        ...baseOptions,
-        type: ChannelType.GuildText,
-        permissionOverwrites: [
-          ...defaultPermissions,
-          {
-            id: roleVerified?.id || guild.id,
-            allow: [
-              PermissionFlagsBits.ViewChannel,
-              PermissionFlagsBits.SendMessages,
-              PermissionFlagsBits.ReadMessageHistory,
-              PermissionFlagsBits.AddReactions,
-              PermissionFlagsBits.EmbedLinks,
-              PermissionFlagsBits.AttachFiles,
-              PermissionFlagsBits.UseExternalEmojis,
-            ],
-          },
-        ],
-      };
-
-    case 'custom':
-    default:
-      return {
-        ...baseOptions,
-        type: ChannelType.GuildText,
-        permissionOverwrites: defaultPermissions,
-      };
-  }
-}
-

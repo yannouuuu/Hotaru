@@ -45,9 +45,9 @@ export default {
 
       if (customId === 'links_menu') {
         await handleLinksMenu(interaction);
-      } else if (customId === 'channel_type_select') {
-        const { handleChannelTypeSelect } = await import('../handlers/channelManagerHandlers.ts');
-        await handleChannelTypeSelect(interaction);
+      } else if (customId === 'channel_refresh_select') {
+        const { handleChannelRefreshSelect } = await import('../handlers/channelManagerHandlers.ts');
+        await handleChannelRefreshSelect(interaction);
       }
     }
 
@@ -69,6 +69,11 @@ export default {
       else if (customId.startsWith('refresh_') || customId === 'git_pull' || customId === 'manage_channels' || customId.startsWith('git_pull_')) {
         await handlePanelActions(interaction);
       }
+      // Gérer les boutons de rafraîchissement des salons
+      else if (customId.startsWith('confirm_refresh_') || customId === 'cancel_refresh') {
+        const { handleChannelRefreshConfirm } = await import('../handlers/channelManagerHandlers.ts');
+        await handleChannelRefreshConfirm(interaction);
+      }
       // Gérer les boutons de cleanup
       else if (customId.startsWith('cleanup_')) {
         await handleCleanupButtons(interaction);
@@ -87,9 +92,6 @@ export default {
         await handleVerifyModal(interaction, client);
       } else if (customId === 'quote_modal') {
         await handleQuoteModal(interaction, client);
-      } else if (customId.startsWith('channel_create_modal_')) {
-        const { handleChannelCreateModal } = await import('../handlers/channelManagerHandlers.ts');
-        await handleChannelCreateModal(interaction);
       }
     }
   },
