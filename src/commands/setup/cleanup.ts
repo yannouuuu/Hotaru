@@ -34,7 +34,7 @@ const command: Command = {
         '• Tous les salons dans les catégories GÉNÉRAL, INFORMATIONS, TICKETS, PUBLIC\n' +
         '• Les catégories elles-mêmes\n\n' +
         '**Rôles qui seront supprimés :**\n' +
-        '• Admin, Délégué, Support, Vérifié, Étudiant\n\n' +
+        '• Admin, Délégué, Support, Vérifié, Étudiant, Bot/Hotaru\n\n' +
         '**Êtes-vous ABSOLUMENT sûr de vouloir continuer ?**'
       )
       .setFooter({ text: 'Cette action est destinée aux tests uniquement !' })
@@ -207,7 +207,9 @@ export const handleCleanupButtons = async (interaction: ButtonInteraction): Prom
           role.name.includes('Délégué') ||
           role.name.includes('Support') ||
           role.name.includes('Vérifié') ||
-          role.name.includes('Étudiant')
+          role.name.includes('Étudiant') ||
+          role.name.includes('Bot') ||
+          role.name.includes('Hotaru')
       );
 
       for (const [, role] of rolesToDelete) {
