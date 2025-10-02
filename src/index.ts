@@ -25,7 +25,6 @@ if (!TOKEN || !CLIENT_ID) {
   process.exit(1);
 }
 
-// Créer le client Discord
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,

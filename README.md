@@ -159,6 +159,7 @@ Copiez tous les IDs générés dans votre `.env`, puis redémarrez le bot.
 - ☕ gossip
 - 🖼️ pictures (threads automatiques)
 - 📖 citations-profs (lecture seule)
+- 🤖 commandes
 
 ### 🔊 SALONS VOCAUX
 - 🎙️ Vocal 1, 2, 3

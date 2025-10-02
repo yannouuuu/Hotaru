@@ -19,7 +19,7 @@ const command: Command = {
     .setDMPermission(false) as SlashCommandBuilder,
 
   async execute(interaction: ChatInputCommandInteraction) {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: 64 });
 
     try {
       const guild = interaction.guild;
@@ -31,6 +31,20 @@ const command: Command = {
       await interaction.editReply('⏳ Configuration du serveur en cours...\n\n**Étape 1/7** : Création des rôles...');
 
       // ========== CRÉATION DES RÔLES ==========
+      const roleBot = await guild.roles.create({
+        name: '🤖 Hotaru',
+        color: 0x7289da,
+        permissions: [],
+        hoist: true, 
+        mentionable: false,
+      });
+
+      try {
+        await (await guild.members.fetch(interaction.client.user.id)).roles.add(roleBot);
+      } catch (error) {
+        console.error('Erreur lors de l\'attribution du rôle Bot au bot:', error);
+      }
+
       const roleAdmin = await guild.roles.create({
         name: '👑 Admin',
         color: 0xe74c3c,
@@ -79,28 +93,6 @@ const command: Command = {
         hoist: false,
         mentionable: false,
       });
-      
-      const roleBot = await guild.roles.create({
-        name: '🤖 Hotaru',
-        color: 0x7289da,
-        permissions: [],
-        hoist: true, 
-        mentionable: false,
-      });
-
-      try {
-        const highestPosition = Math.max(roleAdmin.position, roleDelegue.position, roleSupport.position) + 1;
-        await roleBot.setPosition(highestPosition);
-      } catch (err) {
-        console.error('Erreur lors du repositionnement du rôle Bot:', err);
-      }
-
-      // Attribuer le rôle au bot lui-même
-      try {
-        await (await guild.members.fetch(interaction.client.user.id)).roles.add(roleBot);
-      } catch (error) {
-        console.error('Erreur lors de l\'attribution du rôle Bot au bot:', error);
-      }
 
       await interaction.editReply('⏳ Configuration du serveur en cours...\n\n**Étape 2/7** : Création des catégories...');
 
