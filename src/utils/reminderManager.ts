@@ -164,7 +164,11 @@ const executeReminder = async (reminderId: string): Promise<void> => {
     }
     
     // Gérer la répétition ou marquer comme complété
-    if (reminder.recurring && reminder.recurring !== 'non') {
+    const isRecurring = reminder.recurring === 'quotidien' || 
+                        reminder.recurring === 'hebdomadaire' || 
+                        reminder.recurring === 'mensuel';
+    
+    if (isRecurring) {
       // Calculer le prochain rappel
       let nextDelay = 0;
       
@@ -180,17 +184,15 @@ const executeReminder = async (reminderId: string): Promise<void> => {
           break;
       }
       
-      if (nextDelay > 0) {
-        const nextTime = Date.now() + nextDelay;
-        updateReminderTime(reminderId, nextTime);
-        scheduleReminder(reminderId);
-        console.log(`🔄 Rappel ${reminderId} replanifié pour ${new Date(nextTime).toISOString()}`);
-      }
+      const nextTime = Date.now() + nextDelay;
+      updateReminderTime(reminderId, nextTime);
+      scheduleReminder(reminderId);
+      console.log(`🔄 Rappel récurrent ${reminderId} replanifié pour ${new Date(nextTime).toISOString()}`);
     } else {
-      // Marquer comme complété
+      // Marquer comme complété et arrêter
       updateReminderStatus(reminderId, 'completed');
       activeTimeouts.delete(reminderId);
-      console.log(`✅ Rappel ${reminderId} complété`);
+      console.log(`✅ Rappel ${reminderId} complété et arrêté`);
     }
     
   } catch (error) {
