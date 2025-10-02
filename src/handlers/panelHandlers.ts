@@ -250,33 +250,61 @@ const refreshRoles = async (interaction: ButtonInteraction) => {
 
 // Git pull
 const handleGitPull = async (interaction: ButtonInteraction) => {
-  await interaction.deferReply({ ephemeral: true });
-
   // Détecter si on est sur Heroku (via la variable d'environnement DYNO)
   const isHeroku = process.env.DYNO !== undefined;
+
+  // Si Heroku, afficher un warning et demander confirmation
+  if (isHeroku) {
+    const warningEmbed = new EmbedBuilder()
+      .setColor(0xe67e22)
+      .setTitle('⚠️ Environnement Heroku détecté')
+      .setDescription(
+        '**Cette fonctionnalité ne fonctionne pas sur Heroku** car git n\'est pas installé dans l\'environnement.\n\n' +
+        '**Pour mettre à jour votre bot sur Heroku :**\n' +
+        '1. Poussez vos changements sur GitHub\n' +
+        '2. Exécutez `git push heroku main`\n' +
+        '3. Le bot redémarre automatiquement\n\n' +
+        '**Note :** Cette fonctionnalité est utile pour les déploiements sur VPS, AWS, Google Cloud, etc.'
+      )
+      .setFooter({ text: 'Voulez-vous quand même tenter l\'exécution ?' })
+      .setTimestamp();
+
+    const confirmButton = new ButtonBuilder()
+      .setCustomId('git_pull_confirm')
+      .setLabel('Tenter quand même')
+      .setStyle(ButtonStyle.Danger)
+      .setEmoji('⚠️');
+
+    const cancelButton = new ButtonBuilder()
+      .setCustomId('git_pull_cancel')
+      .setLabel('Annuler')
+      .setStyle(ButtonStyle.Secondary);
+
+    const row = new ActionRowBuilder<ButtonBuilder>().addComponents(cancelButton, confirmButton);
+
+    await interaction.reply({ embeds: [warningEmbed], components: [row], ephemeral: true });
+    return;
+  }
+
+  // Exécution normale pour les autres environnements (VPS, AWS, GCP, etc.)
+  await executeGitPull(interaction);
+};
+
+// Exécuter git pull (fonction séparée pour réutilisation)
+const executeGitPull = async (interaction: ButtonInteraction) => {
+  await interaction.deferReply({ ephemeral: true });
 
   try {
     const { stdout, stderr } = await execAsync('git pull');
     
     const embed = new EmbedBuilder()
-      .setColor(isHeroku ? 0xe67e22 : 0x00b894)
+      .setColor(0x00b894)
       .setTitle('🔄 Git Pull')
       .setDescription('**Résultat de la commande `git pull` :**')
+      .addFields(
+        { name: 'Sortie', value: `\`\`\`\n${stdout || 'Aucune sortie'}\n\`\`\``, inline: false }
+      )
       .setTimestamp();
-
-    // Warning si Heroku
-    if (isHeroku) {
-      embed.addFields({
-        name: '⚠️ Environnement Heroku détecté',
-        value: 'Cette commande ne fonctionnera probablement pas sur Heroku (git non installé).\n' +
-               'Pour mettre à jour : `git push heroku main`',
-        inline: false
-      });
-    }
-
-    embed.addFields(
-      { name: 'Sortie', value: `\`\`\`\n${stdout || 'Aucune sortie'}\n\`\`\``, inline: false }
-    );
 
     if (stderr) {
       embed.addFields({ name: 'Erreurs', value: `\`\`\`\n${stderr}\n\`\`\``, inline: false });
@@ -301,23 +329,33 @@ const handleGitPull = async (interaction: ButtonInteraction) => {
     const errorEmbed = new EmbedBuilder()
       .setColor(0xe74c3c)
       .setTitle('❌ Erreur Git Pull')
+      .setDescription(`**Erreur :**\n\`\`\`\n${error}\n\`\`\``)
       .setTimestamp();
 
-    // Message personnalisé selon l'environnement
-    if (isHeroku) {
-      errorEmbed.setDescription(
-        '**⚠️ Cette commande ne fonctionne pas sur Heroku**\n\n' +
-        'Git n\'est pas installé dans l\'environnement Heroku.\n\n' +
-        '**Pour mettre à jour le bot :**\n' +
-        '1. Poussez vos changements sur GitHub\n' +
-        '2. Exécutez `git push heroku main`\n' +
-        '3. Le bot redémarrera automatiquement avec les changements'
-      );
-    } else {
-      errorEmbed.setDescription(`**Erreur :**\n\`\`\`\n${error}\n\`\`\``);
-    }
-
     await interaction.editReply({ embeds: [errorEmbed] });
+  }
+};
+
+// Gérer la confirmation du git pull sur Heroku
+const handleGitPullConfirmation = async (interaction: ButtonInteraction) => {
+  const { customId } = interaction;
+
+  if (customId === 'git_pull_cancel') {
+    await interaction.update({
+      content: '❌ Git pull annulé.',
+      embeds: [],
+      components: []
+    });
+    return;
+  }
+
+  if (customId === 'git_pull_confirm') {
+    await interaction.update({
+      content: '⏳ Tentative de git pull...',
+      embeds: [],
+      components: []
+    });
+    await executeGitPull(interaction);
   }
 };
 
@@ -353,6 +391,10 @@ export const handlePanelActions = async (interaction: ButtonInteraction): Promis
       break;
     case 'git_pull':
       await handleGitPull(interaction);
+      break;
+    case 'git_pull_confirm':
+    case 'git_pull_cancel':
+      await handleGitPullConfirmation(interaction);
       break;
     default:
       await interaction.reply({ content: '❌ Action inconnue', ephemeral: true });
