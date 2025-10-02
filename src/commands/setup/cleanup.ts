@@ -234,10 +234,10 @@ export const handleCleanupButtons = async (interaction: ButtonInteraction): Prom
         const db = new Database(dbPath);
 
         // Vider toutes les tables
-        db.run('DELETE FROM quotes');
-        db.run('DELETE FROM tickets');
-        db.run('DELETE FROM verified_users');
-        db.run('DELETE FROM photo_counter');
+        db.exec('DELETE FROM quotes');
+        db.exec('DELETE FROM tickets');
+        db.exec('DELETE FROM verified_users');
+        db.exec('DELETE FROM photo_counter');
 
         db.close();
       } catch (error) {

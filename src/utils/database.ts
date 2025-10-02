@@ -21,7 +21,7 @@ if (!existsSync(dataDir)) {
 const db = new Database(join(dataDir, 'hotaru.db'));
 
 // Créer les tables
-db.run(`
+db.exec(`
   CREATE TABLE IF NOT EXISTS quotes (
     id TEXT PRIMARY KEY,
     quote TEXT NOT NULL,
@@ -32,7 +32,7 @@ db.run(`
   )
 `);
 
-db.run(`
+db.exec(`
   CREATE TABLE IF NOT EXISTS tickets (
     channelId TEXT PRIMARY KEY,
     userId TEXT NOT NULL,
@@ -43,7 +43,7 @@ db.run(`
   )
 `);
 
-db.run(`
+db.exec(`
   CREATE TABLE IF NOT EXISTS verified_users (
     userId TEXT PRIMARY KEY,
     email TEXT NOT NULL,
@@ -51,7 +51,7 @@ db.run(`
   )
 `);
 
-db.run(`
+db.exec(`
   CREATE TABLE IF NOT EXISTS photo_counter (
     channelId TEXT PRIMARY KEY,
     counter INTEGER DEFAULT 0
