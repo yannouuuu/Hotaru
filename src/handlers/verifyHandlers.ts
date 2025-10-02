@@ -25,7 +25,6 @@ export const handleVerifyModal = async (
     // Ajouter l'utilisateur à la base de données
     addVerifiedUser(interaction.user.id, email);
 
-    // Attribuer les rôles
     const member = interaction.guild?.members.cache.get(interaction.user.id);
     if (!member) {
       await interaction.reply({
@@ -33,6 +32,32 @@ export const handleVerifyModal = async (
         flags: 64,
       });
       return;
+    }
+
+    // Extraire le nom depuis l'email et renommer l'utilisateur
+    const parsedName = parseEmailToName(email);
+    let nicknameUpdated = false;
+    
+    if (parsedName) {
+      try {
+        // Vérifier si l'utilisateur est le propriétaire du serveur
+        if (member.id === interaction.guild?.ownerId) {
+          console.log(`⚠️ ${member.user.tag} est le propriétaire du serveur - impossible de renommer`);
+        } else {
+          const botMember = await interaction.guild?.members.fetch(client.user!.id);
+          if (!botMember) {
+            console.log('⚠️ Impossible de récupérer les infos du bot');
+          } else if (botMember.permissions.has('ManageNicknames') && 
+                     botMember.roles.highest.position > member.roles.highest.position) {
+            await member.setNickname(parsedName);
+            nicknameUpdated = true;
+            console.log(`✅ Renommage réussi: ${parsedName}`);
+          }
+        }
+      } catch (error) {
+        // Erreur silencieuse - le renommage n'est pas critique
+        console.log(`⚠️ Impossible de renommer ${member.user.tag}`);
+      }
     }
 
     const verifiedRoleId = process.env.ROLE_VERIFIED_ID;
@@ -47,33 +72,8 @@ export const handleVerifyModal = async (
       rolesToAdd.push(studentRoleId);
     }
 
-    // Ajouter les deux rôles en une seule fois
     if (rolesToAdd.length > 0) {
       await member.roles.add(rolesToAdd);
-    }
-
-    // Extraire le nom depuis l'email et renommer l'utilisateur
-    const parsedName = parseEmailToName(email);
-    let nicknameUpdated = false;
-    
-    if (parsedName) {
-      try {
-        // Vérifier si le bot a les permissions nécessaires
-        const botMember = await interaction.guild?.members.fetch(client.user!.id);
-        if (botMember && botMember.permissions.has('ManageNicknames')) {
-          // Vérifier si le bot est assez haut dans la hiérarchie
-          if (botMember.roles.highest.position > member.roles.highest.position) {
-            await member.setNickname(parsedName);
-            nicknameUpdated = true;
-          } else {
-            console.log(`⚠️ Le rôle du bot est trop bas pour renommer ${member.user.tag}`);
-          }
-        } else {
-          console.log('⚠️ Le bot n\'a pas la permission "Gérer les pseudos"');
-        }
-      } catch (error) {
-        console.error('Erreur lors du renommage:', error);
-      }
     }
 
     // Log l'action
