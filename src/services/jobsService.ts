@@ -1,6 +1,6 @@
 /**
  * Service pour récupérer les offres d'emploi depuis l'API France Travail
- * Documentation: https://francetravail.io/data/api/offres-emploi
+ * Documentation: https://www.data.gouv.fr/dataservices/api-offres-demploi/
  */
 
 import axios, { AxiosInstance } from 'axios';
@@ -129,11 +129,11 @@ export class JobsService {
     try {
       await this.authenticate();
 
-      // Communes de la métropole lilloise
+      // Codes INSEE corrects des communes de la métropole lilloise
       const communes = [
-        '59350', // Lille (inclut Wazemmes et Triolo)
-        '59491', // Villeneuve-d'Ascq
-        '59606', // Tourcoing
+        '59350', // Lille
+        '59009', // Villeneuve-d'Ascq
+        '59599', // Tourcoing
         '59343', // Lesquin
       ];
 
@@ -149,7 +149,8 @@ export class JobsService {
             },
             params: {
               commune: commune,
-              distance: 5,
+              rayon: 5, // Rayon de recherche en km
+              alternance: '0', // Exclure les offres en alternance
               range: '0-19',
             },
           });
@@ -164,25 +165,22 @@ export class JobsService {
               const title = offer.intitule.toLowerCase();
               const desc = offer.description?.toLowerCase() || '';
               const contract = offer.typeContratLibelle?.toLowerCase() || '';
+              const duree = offer.dureeTravailLibelle?.toLowerCase() || '';
               
               const isStudentFriendly = 
                 // Mots-clés directs
                 title.includes('étudiant') ||
                 desc.includes('étudiant') ||
                 desc.includes('job étudiant') ||
-                // Temps partiel
-                title.includes('temps partiel') ||
-                offer.dureeTravailLibelle?.includes('Temps partiel') ||
+                // Temps partiel (exclure si 'plein' ou >30h)
+                (duree.includes('temps partiel') && !duree.includes('plein')) ||
                 // Horaires flexibles
                 title.includes('weekend') ||
                 title.includes('soir') ||
                 title.includes('soirée') ||
                 desc.includes('horaires flexibles') ||
                 desc.includes('flexible') ||
-                // Alternance
-                offer.alternance === true ||
-                title.includes('alternance') ||
-                // Contrats courts
+                // Contrats courts (sans alternance, déjà exclu)
                 contract.includes('cdd') && desc.includes('courte durée');
 
               return isStudentFriendly;
@@ -191,7 +189,7 @@ export class JobsService {
             allOffers.push(...filteredOffers);
           }
 
-          // Respecter le rate limit (10 requêtes/seconde)
+          // Respecter le rate limit (10 req/s, délai de 100ms)
           await new Promise(resolve => setTimeout(resolve, 100));
         } catch (error: any) {
           if (error.response?.status !== 204) { // 204 = pas de résultats
