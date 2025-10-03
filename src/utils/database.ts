@@ -59,6 +59,12 @@ db.exec(`
 `);
 
 db.exec(`
+  CREATE TABLE IF NOT EXISTS link_counter (
+    channelId TEXT PRIMARY KEY,
+    counter INTEGER DEFAULT 0
+  )
+`);
+db.exec(`
   CREATE TABLE IF NOT EXISTS reminders (
     id TEXT PRIMARY KEY,
     userId TEXT NOT NULL,
@@ -154,6 +160,25 @@ export const incrementPhotoCounter = (channelId: string): number => {
   
   const stmt = db.prepare(
     'INSERT OR REPLACE INTO photo_counter (channelId, counter) VALUES (?, ?)'
+  );
+  stmt.run(channelId, newCount);
+  
+  return newCount;
+};
+
+// Fonctions pour le compteur de liens
+export const getLinkCounter = (channelId: string): number => {
+  const stmt = db.prepare('SELECT counter FROM link_counter WHERE channelId = ?');
+  const result = stmt.get(channelId) as { counter: number } | undefined;
+  return result?.counter || 0;
+};
+
+export const incrementLinkCounter = (channelId: string): number => {
+  const currentCount = getLinkCounter(channelId);
+  const newCount = currentCount + 1;
+  
+  const stmt = db.prepare(
+    'INSERT OR REPLACE INTO link_counter (channelId, counter) VALUES (?, ?)'
   );
   stmt.run(channelId, newCount);
   

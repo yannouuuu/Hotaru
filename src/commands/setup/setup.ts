@@ -400,6 +400,12 @@ const command: Command = {
         name: '🔗┃liens-utiles',
         type: ChannelType.GuildText,
         parent: categoryDiscussions.id,
+        permissionOverwrites: [
+          {
+            id: roleBot.id,
+            allow: [PermissionFlagsBits.ManageMessages],
+          },
+        ],
         topic: 'Partagez vos liens utiles et découvertes !',
       });
 
@@ -782,8 +788,7 @@ const command: Command = {
           `CHANNEL_VERIFY_ID=${channelVerify.id}\n` +
           `CHANNEL_PICTURES_ID=${channelPictures.id}\n` +
           `CHANNEL_POLLS_ID=${channelPolls.id}\n` +
-          `CHANNEL_JOBS_ID=${channelJobs.id}\n` +
-          `CATEGORY_TICKETS_ID=${categorySupport.id}\n\n` +
+          `CHANNEL_JOBS_ID=${channelJobs.id}\n` + `CHANNEL_LIENS_UTILES_ID=${channelLinks.id}\n` + `CATEGORY_TICKETS_ID=${categorySupport.id}\n\n` +
           `CHANNEL_LOGS_BOTS_ID=${channelLogsBots.id}\n` +
           `CHANNEL_LOGS_MODERATION_ID=${channelLogsModeration.id}\n` +
           `CHANNEL_LOGS_SERVER_ID=${channelLogsServer.id}\n\n` +

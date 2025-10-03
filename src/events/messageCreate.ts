@@ -1,5 +1,5 @@
 import { Events, Message, TextChannel } from 'discord.js';
-import { incrementPhotoCounter } from '../utils/database.ts';
+import { incrementPhotoCounter, incrementLinkCounter } from '../utils/database.ts';
 
 export default {
   name: Events.MessageCreate,
@@ -98,6 +98,41 @@ export default {
         }
       }
     }
+    // Salon liens-utiles - Accepter seulement les messages avec liens et créer un thread
+    if (message.channelId === process.env.CHANNEL_LIENS_UTILES_ID) {
+      const urlRegex = /(https?:\/\/[^\s]+)/i;
+
+      if (urlRegex.test(message.content)) {
+        try {
+          const linkNumber = incrementLinkCounter(message.channelId);
+          const threadName = `🔗 Lien ${linkNumber}`;
+          
+          await message.startThread({
+            name: threadName,
+            autoArchiveDuration: 1440,
+          });
+        } catch (error) {
+          console.error('Erreur lors du traitement du lien:', error);
+        }
+      } else {
+        try {
+          await message.delete();
+          const channel = message.channel as TextChannel;
+          const warning = await channel.send({
+            content: `${message.author}, ce salon est réservé aux liens uniquement ! 🔗\nVous pouvez ajouter du texte avec votre lien.`,
+          });
+          
+          setTimeout(async () => {
+            try {
+              await warning.delete();
+            } catch (error) {
+              console.error('Erreur lors de la suppression du message d\'avertissement:', error);
+            }
+          }, 5000);
+        } catch (error) {
+          console.error('Erreur lors de la suppression du message:', error);
+        }
+      }
+    }
   },
 };
-
