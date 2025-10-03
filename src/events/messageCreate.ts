@@ -36,8 +36,6 @@ export default {
 
     // Salon pictures - Créer automatiquement un thread sur chaque image
     if (message.channelId === process.env.CHANNEL_PICTURES_ID) {
-      console.log(`[DEBUG] Message reçu dans pictures - ID: ${message.id}, Auteur: ${message.author.tag}, Attachments: ${message.attachments.size}`);
-      // Vérifier s'il y a des images/pièces jointes
       if (message.attachments.size > 0) {
         const hasImage = message.attachments.some(attachment => 
           attachment.contentType?.startsWith('image/')
@@ -45,7 +43,6 @@ export default {
 
         if (hasImage) {
           try {
-            console.log(`[DEBUG] Image détectée - Création thread pour message: ${message.id}`);
             // Incrémenter le compteur en base de données (persiste entre les redémarrages)
             const photoNumber = incrementPhotoCounter(message.channelId);
             
@@ -62,9 +59,7 @@ export default {
         } else {
           // A des fichiers mais pas d'images
           try {
-            console.log(`[DEBUG] Fichiers non-image - Tentative suppression message: ${message.id}`);
             await message.delete();
-            console.log(`[DEBUG] Message supprimé avec succès: ${message.id}`);
             const channel = message.channel as TextChannel;
             const warning = await channel.send({
               content: `${message.author}, ce salon est réservé aux **images** uniquement ! 📸`,
@@ -84,9 +79,7 @@ export default {
       } else {
         // Pas de fichiers du tout - Supprimer les messages sans image
         try {
-          console.log(`[DEBUG] Message texte pur - Tentative suppression: ${message.id}`);
           await message.delete();
-          console.log(`[DEBUG] Message texte supprimé avec succès: ${message.id}`);
           const channel = message.channel as TextChannel;
           const warning = await channel.send({
             content: `${message.author}, ce salon est réservé aux images uniquement ! 📸\nVous pouvez ajouter du texte avec votre image.`,

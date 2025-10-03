@@ -198,13 +198,18 @@ export class JobsService {
         }
       }
 
+      // Filtrer les offres datant d'au moins le jour actuel
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const recentOffers = allOffers.filter(offer => new Date(offer.dateCreation) >= today);
+
       // Trier par date de création (plus récent d'abord)
-      allOffers.sort((a, b) => 
+      recentOffers.sort((a, b) => 
         new Date(b.dateCreation).getTime() - new Date(a.dateCreation).getTime()
       );
 
-      console.log(`✅ ${allOffers.length} offres d'emploi trouvées pour étudiants à Lille`);
-      return allOffers.slice(0, 20); // Limiter à 20 offres max
+      console.log(`✅ ${recentOffers.length} offres d'emploi trouvées pour étudiants à Lille`);
+      return recentOffers.slice(0, 20); // Limiter à 20 offres max
     } catch (error) {
       console.error('❌ Erreur lors de la recherche d\'offres:', error);
       return [];

@@ -14,7 +14,7 @@ export default {
 
     // Initialiser le gestionnaire d'offres d'emploi
     const jobsManager = new JobsManager(client);
-    jobsManager.startAutoUpdate(6); // Vérifier toutes les 6 heures
+    jobsManager.startAutoUpdate(1); // Vérifier toutes les heures
 
       const activities = [
       { name: '/help pour démarrer ! 🚀', type: ActivityType.Playing },
