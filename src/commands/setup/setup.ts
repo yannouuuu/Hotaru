@@ -6,10 +6,79 @@ import {
   EmbedBuilder,
   ActionRowBuilder,
   ButtonBuilder,
-  ButtonStyle
+  ButtonStyle,
+  Guild,
+  GuildChannelCreateOptions,
+  TextChannel,
+  StringSelectMenuBuilder,
+  StringSelectMenuOptionBuilder
 } from 'discord.js';
+import type { GuildBasedChannel, ThreadChannel } from 'discord.js';
 import type { Command } from '../../types/index.ts';
 import { universityData } from '../../utils/universityData.ts';
+
+type NonThreadGuildChannel = Exclude<GuildBasedChannel, ThreadChannel>;
+
+/**
+ * Fonction utilitaire pour créer ou réutiliser un salon existant
+ * @param guild Le serveur Discord
+ * @param options Les options de création du salon
+ * @returns Le salon créé ou réutilisé
+ */
+async function createOrReuseChannel(guild: Guild, options: GuildChannelCreateOptions): Promise<NonThreadGuildChannel> {
+  // Recherche d'un salon existant avec le même nom (emoji inclus)
+  const existingChannel = guild.channels.cache.find(
+    (channel): channel is NonThreadGuildChannel => channel.name === options.name && 
+    !channel.isThread() &&
+    (options.parent ? channel.parentId === options.parent : true)
+  );
+
+  if (existingChannel) {
+    console.log(`Réutilisation du salon existant: ${existingChannel.name}`);
+    
+    // Création d'un objet avec uniquement les propriétés compatibles avec edit
+    const editOptions = {
+      topic: options.topic,
+      nsfw: options.nsfw,
+      bitrate: options.bitrate,
+      userLimit: options.userLimit,
+      rateLimitPerUser: options.rateLimitPerUser,
+      permissionOverwrites: options.permissionOverwrites
+    };
+    
+    // Mise à jour des paramètres compatibles
+    await existingChannel.edit(editOptions);
+    
+    // Si le salon a un parent différent, on le déplace
+    if (options.parent && existingChannel.parentId !== options.parent) {
+      await existingChannel.setParent(options.parent);
+    }
+    
+    return existingChannel;
+  }
+  
+  // Si aucun salon existant n'est trouvé, on en crée un nouveau
+  return await guild.channels.create({
+    name: options.name,
+    type: options.type,
+    topic: options.topic,
+    nsfw: options.nsfw,
+    bitrate: options.bitrate,
+    userLimit: options.userLimit,
+    parent: options.parent,
+    permissionOverwrites: options.permissionOverwrites,
+    position: options.position,
+    rateLimitPerUser: options.rateLimitPerUser,
+    rtcRegion: options.rtcRegion
+  }) as NonThreadGuildChannel;
+}
+
+// Fonction pour afficher un message de log sur la réutilisation ou création de salon
+function logChannelAction(channelName: string, isReused: boolean) {
+  return isReused 
+    ? `✅ Salon existant réutilisé: ${channelName}`
+    : `➕ Nouveau salon créé: ${channelName}`;
+}
 
 const command: Command = {
   data: new SlashCommandBuilder()
@@ -19,7 +88,7 @@ const command: Command = {
     .setDMPermission(false) as SlashCommandBuilder,
 
   async execute(interaction: ChatInputCommandInteraction) {
-    await interaction.deferReply({ flags: 64 });
+    await interaction.deferReply({ ephemeral: true });
 
     try {
       const guild = interaction.guild;
@@ -107,13 +176,13 @@ const command: Command = {
       // ========== CRÉATION DES CATÉGORIES ==========
       
       // 🛠️ SYSTÈME
-      const categorySystem = await guild.channels.create({
+      const categorySystem = await createOrReuseChannel(guild, {
         name: '🛠️ SYSTÈME',
         type: ChannelType.GuildCategory,
       });
 
       // 💬 DISCUSSIONS
-      const categoryDiscussions = await guild.channels.create({
+      const categoryDiscussions = await createOrReuseChannel(guild, {
         name: '💬 DISCUSSIONS',
         type: ChannelType.GuildCategory,
         permissionOverwrites: [
@@ -129,7 +198,7 @@ const command: Command = {
       });
 
       // 🔊 SALONS VOCAUX
-      const categoryVoice = await guild.channels.create({
+      const categoryVoice = await createOrReuseChannel(guild, {
         name: '🔊 SALONS VOCAUX',
         type: ChannelType.GuildCategory,
         permissionOverwrites: [
@@ -145,7 +214,7 @@ const command: Command = {
       });
 
       // 📚 COURS & ENTRAIDE
-      const categoryCours = await guild.channels.create({
+      const categoryCours = await createOrReuseChannel(guild, {
         name: '📚 COURS & ENTRAIDE',
         type: ChannelType.GuildCategory,
         permissionOverwrites: [
@@ -161,7 +230,7 @@ const command: Command = {
       });
 
       // 🎟️ SUPPORT
-      const categorySupport = await guild.channels.create({
+      const categorySupport = await createOrReuseChannel(guild, {
         name: '🎟️ SUPPORT',
         type: ChannelType.GuildCategory,
         permissionOverwrites: [
@@ -173,7 +242,7 @@ const command: Command = {
       });
 
       // 🛡️ MODÉRATION
-      const categoryModeration = await guild.channels.create({
+      const categoryModeration = await createOrReuseChannel(guild, {
         name: '🛡️ MODÉRATION',
         type: ChannelType.GuildCategory,
         permissionOverwrites: [
@@ -195,7 +264,7 @@ const command: Command = {
       await interaction.editReply('⏳ Configuration du serveur en cours...\n\n**Étape 3/7** : Création des salons système...');
 
       // ========== 🛠️ SYSTÈME ==========
-      const channelWelcome = await guild.channels.create({
+      const channelWelcome = await createOrReuseChannel(guild, {
         name: '👋┃bienvenue',
         type: ChannelType.GuildText,
         parent: categorySystem.id,
@@ -206,9 +275,9 @@ const command: Command = {
             deny: [PermissionFlagsBits.SendMessages],
           },
         ],
-      });
+      }) as TextChannel;
 
-      const channelVerify = await guild.channels.create({
+      const channelVerify = await createOrReuseChannel(guild, {
         name: '✅┃vérification',
         type: ChannelType.GuildText,
         parent: categorySystem.id,
@@ -224,9 +293,9 @@ const command: Command = {
           },
         ],
         topic: 'Vérifiez votre statut d\'étudiant avec /verify',
-      });
+      }) as TextChannel;
 
-      const channelRules = await guild.channels.create({
+      const channelRules = await createOrReuseChannel(guild, {
         name: '📜┃règlement',
         type: ChannelType.GuildText,
         parent: categorySystem.id,
@@ -237,9 +306,9 @@ const command: Command = {
             deny: [PermissionFlagsBits.SendMessages],
           },
         ],
-      });
+      }) as TextChannel;
 
-      const channelAnnouncements = await guild.channels.create({
+      const channelAnnouncements = await createOrReuseChannel(guild, {
         name: '📢┃annonces',
         type: ChannelType.GuildText,
         parent: categorySystem.id,
@@ -259,9 +328,9 @@ const command: Command = {
           },
         ],
         topic: 'Annonces importantes',
-      });
+      }) as TextChannel;
 
-      const channelRoles = await guild.channels.create({
+      const channelRoles = await createOrReuseChannel(guild, {
         name: '🎭┃rôles',
         type: ChannelType.GuildText,
         parent: categorySystem.id,
@@ -277,9 +346,9 @@ const command: Command = {
           },
         ],
         topic: 'Réagissez pour obtenir vos rôles',
-      });
+      }) as TextChannel;
 
-      const channelInformations = await guild.channels.create({
+      const channelInformations = await createOrReuseChannel(guild, {
         name: 'ℹ️┃informations',
         type: ChannelType.GuildText,
         parent: categorySystem.id,
@@ -295,26 +364,26 @@ const command: Command = {
           },
         ],
         topic: 'Informations importantes, liens utiles et ressources de l\'université',
-      });
+      }) as TextChannel;
 
       await interaction.editReply('⏳ Configuration du serveur en cours...\n\n**Étape 4/7** : Création des salons de discussion...');
 
       // ========== 💬 DISCUSSIONS ==========
-      const channelGeneral = await guild.channels.create({
+      const channelGeneral = await createOrReuseChannel(guild, {
         name: '💬┃général',
         type: ChannelType.GuildText,
         parent: categoryDiscussions.id,
         topic: 'Discussion générale',
-      });
+      }) as TextChannel;
 
-      const channelGossip = await guild.channels.create({
+      const channelGossip = await createOrReuseChannel(guild, {
         name: '☕┃gossip',
         type: ChannelType.GuildText,
         parent: categoryDiscussions.id,
         topic: 'Les potins du BUT Info',
-      });
+      }) as TextChannel;
 
-      const channelPictures = await guild.channels.create({
+      const channelPictures = await createOrReuseChannel(guild, {
         name: '🖼️┃pictures',
         type: ChannelType.GuildText,
         parent: categoryDiscussions.id,
@@ -325,9 +394,9 @@ const command: Command = {
           },
         ],
         topic: 'Partagez vos photos ! Un thread sera automatiquement créé',
-      });
+      }) as TextChannel;
 
-      const channelQuotes = await guild.channels.create({
+      const channelQuotes = await createOrReuseChannel(guild, {
         name: '📖┃citations-profs',
         type: ChannelType.GuildText,
         parent: categoryDiscussions.id,
@@ -343,9 +412,9 @@ const command: Command = {
           },
         ],
         topic: 'Les meilleures citations de nos profs ! Utilisez /quote pour en ajouter',
-      });
+      }) as TextChannel;
 
-      const channelBotCommands = await guild.channels.create({
+      const channelBotCommands = await createOrReuseChannel(guild, {
         name: '🤖┃commandes',
         type: ChannelType.GuildText,
         parent: categoryDiscussions.id,
@@ -360,9 +429,9 @@ const command: Command = {
           },
         ],
         topic: 'Utilisez les commandes du bot ici pour éviter de polluer les autres salons',
-      });
+      }) as TextChannel;
 
-      const channelPolls = await guild.channels.create({
+      const channelPolls = await createOrReuseChannel(guild, {
         name: '📊┃sondages',
         type: ChannelType.GuildText,
         parent: categoryDiscussions.id,
@@ -387,16 +456,16 @@ const command: Command = {
           },
         ],
         topic: '📊 Créez des sondages ici ! Seuls les sondages sont autorisés. Un thread de discussion s\'ouvrira automatiquement.',
-      });
+      }) as TextChannel;
 
-      const channelMemes = await guild.channels.create({
+      const channelMemes = await createOrReuseChannel(guild, {
         name: '😂┃memes',
         type: ChannelType.GuildText,
         parent: categoryDiscussions.id,
         topic: 'Partagez vos memes et délires ! 🤣',
-      });
+      }) as TextChannel;
 
-      const channelLinks = await guild.channels.create({
+      const channelLinks = await createOrReuseChannel(guild, {
         name: '🔗┃liens-utiles',
         type: ChannelType.GuildText,
         parent: categoryDiscussions.id,
@@ -407,9 +476,9 @@ const command: Command = {
           },
         ],
         topic: 'Partagez vos liens utiles et découvertes !',
-      });
+      }) as TextChannel;
 
-      const channelJobs = await guild.channels.create({
+      const channelJobs = await createOrReuseChannel(guild, {
         name: '💼┃jobs',
         type: ChannelType.GuildText,
         parent: categoryDiscussions.id,
@@ -425,30 +494,30 @@ const command: Command = {
           },
         ],
         topic: '💼 Offres d\'emploi étudiants à Lille - Mis à jour automatiquement',
-      });
+      }) as TextChannel;
 
       await interaction.editReply('⏳ Configuration du serveur en cours...\n\n**Étape 5/7** : Création des salons vocaux...');
 
       // ========== 🔊 SALONS VOCAUX ==========
-      const voiceChannel1 = await guild.channels.create({
+      const voiceChannel1 = await createOrReuseChannel(guild, {
         name: '🎙️┃Vocal 1',
         type: ChannelType.GuildVoice,
         parent: categoryVoice.id,
       });
 
-      const voiceChannel2 = await guild.channels.create({
+      const voiceChannel2 = await createOrReuseChannel(guild, {
         name: '🎙️┃Vocal 2',
         type: ChannelType.GuildVoice,
         parent: categoryVoice.id,
       });
 
-      const voiceChannel3 = await guild.channels.create({
+      const voiceChannel3 = await createOrReuseChannel(guild, {
         name: '🎙️┃Vocal 3',
         type: ChannelType.GuildVoice,
         parent: categoryVoice.id,
       });
 
-      const voiceAmphi = await guild.channels.create({
+      const voiceAmphi = await createOrReuseChannel(guild, {
         name: '🏛️┃Amphi',
         type: ChannelType.GuildVoice,
         parent: categoryVoice.id,
@@ -458,36 +527,36 @@ const command: Command = {
       await interaction.editReply('⏳ Configuration du serveur en cours...\n\n**Étape 6/7** : Création des salons de cours...');
 
       // ========== 📚 COURS & ENTRAIDE ==========
-      const channelAideDevoirs = await guild.channels.create({
+      const channelAideDevoirs = await createOrReuseChannel(guild, {
         name: '📝┃aide-devoirs',
         type: ChannelType.GuildText,
         parent: categoryCours.id,
         topic: 'Besoin d\'aide sur un devoir ? Demandez ici !',
-      });
+      }) as TextChannel;
 
-      const channelSAE = await guild.channels.create({
+      const channelSAE = await createOrReuseChannel(guild, {
         name: '🎯┃sae',
         type: ChannelType.GuildText,
         parent: categoryCours.id,
         topic: 'Discussions et entraide sur les SAE (Situations d\'Apprentissage et d\'Évaluation)',
-      });
+      }) as TextChannel;
 
-      const channelRessources = await guild.channels.create({
+      const channelRessources = await createOrReuseChannel(guild, {
         name: '📂┃ressources',
         type: ChannelType.GuildText,
         parent: categoryCours.id,
         topic: 'Partagez vos ressources, tutoriels, liens utiles',
-      });
+      }) as TextChannel;
 
-      const channelPartageCours = await guild.channels.create({
+      const channelPartageCours = await createOrReuseChannel(guild, {
         name: '📑┃partage-cours',
         type: ChannelType.GuildText,
         parent: categoryCours.id,
         topic: 'Partagez vos notes de cours',
-      });
+      }) as TextChannel;
 
       // ========== 🎟️ SUPPORT ==========
-      const channelSupport = await guild.channels.create({
+      const channelSupport = await createOrReuseChannel(guild, {
         name: '🎟️┃support',
         type: ChannelType.GuildText,
         parent: categorySupport.id,
@@ -503,10 +572,10 @@ const command: Command = {
           },
         ],
         topic: 'Ouvrez un ticket pour obtenir de l\'aide',
-      });
+      }) as TextChannel;
 
       // ========== 🛡️ MODÉRATION ==========
-      const channelPanelControl = await guild.channels.create({
+      const channelPanelControl = await createOrReuseChannel(guild, {
         name: '🎛️┃panel-controle',
         type: ChannelType.GuildText,
         parent: categoryModeration.id,
@@ -521,28 +590,28 @@ const command: Command = {
           },
         ],
         topic: 'Panel de contrôle du bot - Admins uniquement',
-      });
+      }) as TextChannel;
 
-      const channelLogsBots = await guild.channels.create({
+      const channelLogsBots = await createOrReuseChannel(guild, {
         name: '🤖┃logs-bots',
         type: ChannelType.GuildText,
         parent: categoryModeration.id,
         topic: 'Logs des actions du bot',
-      });
+      }) as TextChannel;
 
-      const channelLogsModeration = await guild.channels.create({
+      const channelLogsModeration = await createOrReuseChannel(guild, {
         name: '🛡️┃logs-modération',
         type: ChannelType.GuildText,
         parent: categoryModeration.id,
         topic: 'Logs des actions de modération',
-      });
+      }) as TextChannel;
 
-      const channelLogsServer = await guild.channels.create({
+      const channelLogsServer = await createOrReuseChannel(guild, {
         name: '🗂️┃logs-serveur',
         type: ChannelType.GuildText,
         parent: categoryModeration.id,
         topic: 'Logs des événements du serveur',
-      });
+      }) as TextChannel;
 
       await interaction.editReply('⏳ Configuration du serveur en cours...\n\n**Étape 7/7** : Envoi des messages...');
 
@@ -590,7 +659,6 @@ const command: Command = {
       const rolesMessage = await channelRoles.send({ embeds: [rolesEmbed], components: [rolesRow] });
 
       // Message des liens utiles avec menu interactif
-      const { StringSelectMenuBuilder, StringSelectMenuOptionBuilder } = await import('discord.js');
       
       const linksMainEmbed = new EmbedBuilder()
         .setColor(0x9b59b6)
@@ -638,7 +706,7 @@ const command: Command = {
             .setEmoji('🔗')
         );
 
-      const linksRow = new ActionRowBuilder<any>().addComponents(linksSelectMenu);
+      const linksRow = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(linksSelectMenu);
       const linksMessage = await channelInformations.send({ embeds: [linksMainEmbed], components: [linksRow] });
 
       // Message de support (tickets)  
@@ -788,7 +856,9 @@ const command: Command = {
           `CHANNEL_VERIFY_ID=${channelVerify.id}\n` +
           `CHANNEL_PICTURES_ID=${channelPictures.id}\n` +
           `CHANNEL_POLLS_ID=${channelPolls.id}\n` +
-          `CHANNEL_JOBS_ID=${channelJobs.id}\n` + `CHANNEL_LIENS_UTILES_ID=${channelLinks.id}\n` + `CATEGORY_TICKETS_ID=${categorySupport.id}\n\n` +
+          `CHANNEL_JOBS_ID=${channelJobs.id}\n` + 
+          `CHANNEL_LIENS_UTILES_ID=${channelLinks.id}\n` + 
+          `CATEGORY_TICKETS_ID=${categorySupport.id}\n\n` +
           `CHANNEL_LOGS_BOTS_ID=${channelLogsBots.id}\n` +
           `CHANNEL_LOGS_MODERATION_ID=${channelLogsModeration.id}\n` +
           `CHANNEL_LOGS_SERVER_ID=${channelLogsServer.id}\n\n` +
