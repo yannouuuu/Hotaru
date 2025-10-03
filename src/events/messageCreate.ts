@@ -1,4 +1,4 @@
-import { Events, Message } from 'discord.js';
+import { Events, Message, TextChannel } from 'discord.js';
 import { incrementPhotoCounter } from '../utils/database.ts';
 
 export default {
@@ -14,7 +14,8 @@ export default {
         // Ce n'est pas un sondage, supprimer le message
         try {
           await message.delete();
-          const warning = await message.channel.send({
+          const channel = message.channel as TextChannel;
+          const warning = await channel.send({
             content: `${message.author}, ce salon est réservé aux **sondages** uniquement ! 📊\n\nPour créer un sondage, utilisez le bouton 📊 dans la barre de saisie de Discord.`,
           });
           
@@ -35,6 +36,7 @@ export default {
 
     // Salon pictures - Créer automatiquement un thread sur chaque image
     if (message.channelId === process.env.CHANNEL_PICTURES_ID) {
+      console.log(`[DEBUG] Message reçu dans pictures - ID: ${message.id}, Auteur: ${message.author.tag}, Attachments: ${message.attachments.size}`);
       // Vérifier s'il y a des images/pièces jointes
       if (message.attachments.size > 0) {
         const hasImage = message.attachments.some(attachment => 
@@ -43,6 +45,7 @@ export default {
 
         if (hasImage) {
           try {
+            console.log(`[DEBUG] Image détectée - Création thread pour message: ${message.id}`);
             // Incrémenter le compteur en base de données (persiste entre les redémarrages)
             const photoNumber = incrementPhotoCounter(message.channelId);
             
@@ -59,8 +62,11 @@ export default {
         } else {
           // A des fichiers mais pas d'images
           try {
+            console.log(`[DEBUG] Fichiers non-image - Tentative suppression message: ${message.id}`);
             await message.delete();
-            const warning = await message.channel.send({
+            console.log(`[DEBUG] Message supprimé avec succès: ${message.id}`);
+            const channel = message.channel as TextChannel;
+            const warning = await channel.send({
               content: `${message.author}, ce salon est réservé aux **images** uniquement ! 📸`,
             });
             
@@ -78,8 +84,11 @@ export default {
       } else {
         // Pas de fichiers du tout - Supprimer les messages sans image
         try {
+          console.log(`[DEBUG] Message texte pur - Tentative suppression: ${message.id}`);
           await message.delete();
-          const warning = await message.channel.send({
+          console.log(`[DEBUG] Message texte supprimé avec succès: ${message.id}`);
+          const channel = message.channel as TextChannel;
+          const warning = await channel.send({
             content: `${message.author}, ce salon est réservé aux images uniquement ! 📸\nVous pouvez ajouter du texte avec votre image.`,
           });
           

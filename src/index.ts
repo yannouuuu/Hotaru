@@ -16,6 +16,12 @@ import { loadEvents } from './loaders/eventLoader.ts';
 
 config();
 
+// Afficher les variables d'environnement pour le débogage
+console.log('[DEBUG] Variables d\'environnement chargées:');
+console.log(`[DEBUG] CHANNEL_PICTURES_ID: ${process.env.CHANNEL_PICTURES_ID || 'Non défini'}`);
+console.log(`[DEBUG] CLIENT_ID: ${process.env.CLIENT_ID ? 'Défini' : 'Non défini'}`);
+console.log(`[DEBUG] GUILD_ID: ${process.env.GUILD_ID ? 'Défini' : 'Non défini'}`);
+
 const TOKEN = process.env.DISCORD_TOKEN;
 const CLIENT_ID = process.env.CLIENT_ID;
 const GUILD_ID = process.env.GUILD_ID;
