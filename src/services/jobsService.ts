@@ -95,7 +95,7 @@ export class JobsService {
       params.append('grant_type', 'client_credentials');
       params.append('client_id', this.clientId);
       params.append('client_secret', this.clientSecret);
-      params.append('scope', 'api_offresdemploiv2 o2dsoffre');
+      params.append('scope', `api_offresdemploiv2 o2dsoffre application_${this.clientId}`);
 
       const response = await axios.post<FranceTravailAuthResponse>(
         this.authURL,
@@ -156,12 +156,8 @@ export class JobsService {
             },
             params: {
               commune: commune,
-              distance: 10, // 10 km autour
-              typeContrat: 'CDD,CDI,MIS,SAI', // CDD, CDI, Intérim, Saisonnier
-              tempsPlein: false, // Inclure temps partiel
-              experienceExigence: '1,D', // Débutant accepté
-              sort: 1, // Tri par date décroissante
-              range: '0-20', // Limiter à 20 offres par commune
+              distance: 10,
+              range: '0-19',
             },
           });
 
