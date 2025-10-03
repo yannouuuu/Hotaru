@@ -76,13 +76,23 @@ async function deployCommands() {
 
   try {
     if (GUILD_ID) {
-      // Déploiement en mode développement (serveur spécifique)
+      await rest.put(
+        Routes.applicationGuildCommands(CLIENT_ID!, GUILD_ID),
+        { body: [] }
+      );
+      await rest.put(
+        Routes.applicationCommands(CLIENT_ID!),
+        { body: [] }
+      );
       await rest.put(
         Routes.applicationGuildCommands(CLIENT_ID!, GUILD_ID),
         { body: commands }
       );
     } else {
-      // Déploiement global
+      await rest.put(
+        Routes.applicationCommands(CLIENT_ID!),
+        { body: [] }
+      );
       await rest.put(
         Routes.applicationCommands(CLIENT_ID!),
         { body: commands }
