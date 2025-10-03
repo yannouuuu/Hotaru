@@ -50,7 +50,7 @@ export const handleRoleToggle = async (interaction: ButtonInteraction): Promise<
       
       if (!jobsRoleId) {
         await interaction.editReply({ 
-          content: '❌ Le rôle Jobs n\'est pas configuré. Vérifiez votre .env' 
+          content: '❌ Le rôle Jobs n\'est pas configuré. Vérifiez la configuration' 
         });
         return;
       }

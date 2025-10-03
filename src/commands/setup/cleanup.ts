@@ -209,7 +209,8 @@ export const handleCleanupButtons = async (interaction: ButtonInteraction): Prom
           role.name.includes('Vérifié') ||
           role.name.includes('Étudiant') ||
           role.name.includes('Bot') ||
-          role.name.includes('Hotaru')
+          role.name.includes('Hotaru') ||
+          role.name.includes('Jobs')
       );
 
       for (const [, role] of rolesToDelete) {
