@@ -147,6 +147,17 @@ export const getVerifiedUser = (userId: string): { userId: string; email: string
   return stmt.get(userId) as { userId: string; email: string; verifiedAt: number } | undefined;
 };
 
+export const removeVerifiedUser = (userId: string): boolean => {
+  const stmt = db.prepare('DELETE FROM verified_users WHERE userId = ?');
+  const result = stmt.run(userId);
+  return result.changes > 0;
+};
+
+export const getAllVerifiedUsers = (): { userId: string; email: string; verifiedAt: number }[] => {
+  const stmt = db.prepare('SELECT * FROM verified_users ORDER BY verifiedAt DESC');
+  return stmt.all() as { userId: string; email: string; verifiedAt: number }[];
+};
+
 // Fonctions pour le compteur de photos
 export const getPhotoCounter = (channelId: string): number => {
   const stmt = db.prepare('SELECT counter FROM photo_counter WHERE channelId = ?');
