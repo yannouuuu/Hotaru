@@ -95,7 +95,7 @@ export class JobsService {
       params.append('grant_type', 'client_credentials');
       params.append('client_id', this.clientId);
       params.append('client_secret', this.clientSecret);
-      params.append('scope', 'api_offresdeploiv2 o2dsoffre');
+      params.append('scope', 'api_offresdemploiv2 o2dsoffre');
 
       const response = await axios.post<FranceTravailAuthResponse>(
         this.authURL,
