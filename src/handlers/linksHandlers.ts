@@ -6,6 +6,21 @@ export const handleLinksMenu = async (interaction: StringSelectMenuInteraction):
   let embed: EmbedBuilder;
 
   switch (choice) {
+    case 'notion_yann':
+      embed = new EmbedBuilder()
+        .setColor(0x000000)
+        .setTitle('📓 Notion de Yann - BUT Informatique')
+        .setDescription(
+          '**[📓 Accéder au Notion](https://www.notion.so/BUT1-Informatique-IUT-de-Lille-2025-2026-27b6e4f7ea6581998644c2590374d65b)**\n\n' +
+          '✨ **Ressources complètes pour BUT Info 2025-2026**\n' +
+          '• Cours et supports de cours\n' +
+          '• Exercices et corrections\n' +
+          '• Conseils et méthodologie\n'
+        )
+        .setFooter({ text: 'Notion - BUT Informatique IUT Lille' })
+        .setTimestamp();
+      break;
+
     case 'edt_notes':
       embed = new EmbedBuilder()
         .setColor(0x3498db)
@@ -70,6 +85,11 @@ export const handleLinksMenu = async (interaction: StringSelectMenuInteraction):
         .setColor(0x9b59b6)
         .setTitle('🔗 Tous les liens - Université de Lille')
         .addFields(
+          {
+            name: '📓 Notion Yann',
+            value: '[Accéder](https://www.notion.so/BUT1-Informatique-IUT-de-Lille-2025-2026-27b6e4f7ea6581998644c2590374d65b)',
+            inline: true
+          },
           {
             name: '📅 Emploi du temps',
             value: '[Accéder](https://edt-iut.univ-lille.fr/)',

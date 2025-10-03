@@ -279,8 +279,8 @@ const command: Command = {
         topic: 'Réagissez pour obtenir vos rôles',
       });
 
-      const channelLinks = await guild.channels.create({
-        name: '🔗┃liens-utiles',
+      const channelInformations = await guild.channels.create({
+        name: 'ℹ️┃informations',
         type: ChannelType.GuildText,
         parent: categorySystem.id,
         permissionOverwrites: [
@@ -294,7 +294,7 @@ const command: Command = {
             deny: [PermissionFlagsBits.SendMessages],
           },
         ],
-        topic: 'Tous les liens importants de l\'université',
+        topic: 'Informations importantes, liens utiles et ressources de l\'université',
       });
 
       await interaction.editReply('⏳ Configuration du serveur en cours...\n\n**Étape 4/7** : Création des salons de discussion...');
@@ -318,6 +318,12 @@ const command: Command = {
         name: '🖼️┃pictures',
         type: ChannelType.GuildText,
         parent: categoryDiscussions.id,
+        permissionOverwrites: [
+          {
+            id: roleBot.id,
+            allow: [PermissionFlagsBits.ManageMessages],
+          },
+        ],
         topic: 'Partagez vos photos ! Un thread sera automatiquement créé',
       });
 
@@ -388,6 +394,13 @@ const command: Command = {
         type: ChannelType.GuildText,
         parent: categoryDiscussions.id,
         topic: 'Partagez vos memes et délires ! 🤣',
+      });
+
+      const channelLinks = await guild.channels.create({
+        name: '🔗┃liens-utiles',
+        type: ChannelType.GuildText,
+        parent: categoryDiscussions.id,
+        topic: 'Partagez vos liens utiles et découvertes !',
       });
 
       const channelJobs = await guild.channels.create({
@@ -575,7 +588,7 @@ const command: Command = {
       
       const linksMainEmbed = new EmbedBuilder()
         .setColor(0x9b59b6)
-        .setTitle('🔗 Liens Utiles - Université de Lille')
+        .setTitle('ℹ️ Informations - Université de Lille')
         .setDescription(
           '**Tous les liens importants pour votre parcours au BUT Informatique**\n\n' +
           'Utilisez le menu ci-dessous pour accéder rapidement aux différentes sections.'
@@ -587,6 +600,11 @@ const command: Command = {
         .setCustomId('links_menu')
         .setPlaceholder('📚 Sélectionnez une catégorie')
         .addOptions(
+          new StringSelectMenuOptionBuilder()
+            .setLabel('📓 Notion de Yann')
+            .setDescription('Ressources et cours BUT1 Info')
+            .setValue('notion_yann')
+            .setEmoji('📓'),
           new StringSelectMenuOptionBuilder()
             .setLabel('📅 Emploi du temps & Notes')
             .setDescription('EDT et bulletin de notes')
@@ -615,7 +633,7 @@ const command: Command = {
         );
 
       const linksRow = new ActionRowBuilder<any>().addComponents(linksSelectMenu);
-      const linksMessage = await channelLinks.send({ embeds: [linksMainEmbed], components: [linksRow] });
+      const linksMessage = await channelInformations.send({ embeds: [linksMainEmbed], components: [linksRow] });
 
       // Message de support (tickets)  
       const supportEmbed = new EmbedBuilder()
@@ -717,7 +735,7 @@ const command: Command = {
       // Sauvegarder les IDs des messages dans un fichier JSON
       const messageIds = {
         support: { channelId: channelSupport.id, messageId: supportMessage.id },
-        links: { channelId: channelLinks.id, messageId: linksMessage.id },
+        links: { channelId: channelInformations.id, messageId: linksMessage.id },
         verify: { channelId: channelVerify.id, messageId: verifyMessage.id },
         roles: { channelId: channelRoles.id, messageId: rolesMessage.id },
       };

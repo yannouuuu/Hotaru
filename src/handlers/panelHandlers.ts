@@ -71,7 +71,7 @@ export const refreshSupport = async (interaction: ButtonInteraction) => {
   }
 };
 
-// Rafraîchir le message des liens
+// Rafraîchir le message des informations/liens
 export const refreshLinks = async (interaction: ButtonInteraction) => {
   const config = loadPanelConfig();
   const linksConfig = config.links;
@@ -86,7 +86,7 @@ export const refreshLinks = async (interaction: ButtonInteraction) => {
     
     const embed = new EmbedBuilder()
       .setColor(0x9b59b6)
-      .setTitle('🔗 Liens Utiles - Université de Lille')
+      .setTitle('ℹ️ Informations - Université de Lille')
       .setDescription(
         '**Tous les liens importants pour votre parcours au BUT Informatique**\n\n' +
         'Utilisez le menu ci-dessous pour accéder rapidement aux différentes sections.'
@@ -98,6 +98,11 @@ export const refreshLinks = async (interaction: ButtonInteraction) => {
       .setCustomId('links_menu')
       .setPlaceholder('📚 Sélectionnez une catégorie')
       .addOptions(
+        new StringSelectMenuOptionBuilder()
+          .setLabel('📓 Notion de Yann')
+          .setDescription('Ressources et cours BUT Info')
+          .setValue('notion_yann')
+          .setEmoji('📓'),
         new StringSelectMenuOptionBuilder()
           .setLabel('📅 Emploi du temps & Notes')
           .setDescription('EDT et bulletin de notes')
