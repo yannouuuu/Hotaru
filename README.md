@@ -88,7 +88,4 @@ Utiliser `deploy-heroku.ps1` pour déploiement automatique. Voir `HEROKU_DEPLOYM
 - TypeScript
 - SQLite
 
-## Licence
-MIT
-
 <img alt="Hotaru: A Discord bot for student servers" src="assets/footer.png" width="100%" />
