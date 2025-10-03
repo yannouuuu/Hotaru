@@ -1,4 +1,4 @@
-# Hotaru
+<img alt="Hotaru: A Discord bot for student servers" src="assets/header.svg" width="100%" />
 
 Hotaru est un bot Discord développé pour la gestion de serveurs dédiés aux étudiants du BUT Informatique de l'Université de Lille. Il intègre des fonctionnalités de vérification, modération, gestion de contenu et intégration IA.
 
@@ -91,4 +91,4 @@ Utiliser `deploy-heroku.ps1` pour déploiement automatique. Voir `HEROKU_DEPLOYM
 ## Licence
 MIT
 
-
+<img alt="Hotaru: A Discord bot for student servers" src="assets/footer.svg" width="100%" />
