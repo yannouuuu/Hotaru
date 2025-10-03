@@ -129,19 +129,12 @@ export class JobsService {
     try {
       await this.authenticate();
 
-      // Communes proches de Lille (dans un rayon raisonnable)
+      // Communes de la métropole lilloise
       const communes = [
-        '59350', // Lille
+        '59350', // Lille (inclut Wazemmes et Triolo)
         '59491', // Villeneuve-d'Ascq
-        '59512', // Wasquehal
-        '59152', // Croix
-        '59163', // Roubaix
         '59606', // Tourcoing
-        '59178', // La Madeleine
-        '59017', // Lambersart
-        '59368', // Mons-en-Barœul
-        '59457', // Marquette-lez-Lille
-        '59298', // Hem
+        '59343', // Lesquin
       ];
 
       const allOffers: JobOffer[] = [];
@@ -156,7 +149,7 @@ export class JobsService {
             },
             params: {
               commune: commune,
-              distance: 10,
+              distance: 5,
               range: '0-19',
             },
           });
@@ -170,15 +163,27 @@ export class JobsService {
               // Vérifier si c'est adapté pour étudiants
               const title = offer.intitule.toLowerCase();
               const desc = offer.description?.toLowerCase() || '';
+              const contract = offer.typeContratLibelle?.toLowerCase() || '';
+              
               const isStudentFriendly = 
+                // Mots-clés directs
                 title.includes('étudiant') ||
+                desc.includes('étudiant') ||
+                desc.includes('job étudiant') ||
+                // Temps partiel
                 title.includes('temps partiel') ||
+                offer.dureeTravailLibelle?.includes('Temps partiel') ||
+                // Horaires flexibles
                 title.includes('weekend') ||
                 title.includes('soir') ||
-                offer.dureeTravailLibelle?.includes('Temps partiel') ||
+                title.includes('soirée') ||
+                desc.includes('horaires flexibles') ||
+                desc.includes('flexible') ||
+                // Alternance
                 offer.alternance === true ||
-                desc.includes('étudiant') ||
-                desc.includes('flexible');
+                title.includes('alternance') ||
+                // Contrats courts
+                contract.includes('cdd') && desc.includes('courte durée');
 
               return isStudentFriendly;
             });
@@ -186,8 +191,8 @@ export class JobsService {
             allOffers.push(...filteredOffers);
           }
 
-          // Respecter le rate limit (3 requêtes/seconde)
-          await new Promise(resolve => setTimeout(resolve, 350));
+          // Respecter le rate limit (10 requêtes/seconde)
+          await new Promise(resolve => setTimeout(resolve, 100));
         } catch (error: any) {
           if (error.response?.status !== 204) { // 204 = pas de résultats
             console.error(`Erreur recherche commune ${commune}:`, error.message);
