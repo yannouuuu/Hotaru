@@ -27,25 +27,21 @@ type NonThreadGuildChannel = Exclude<GuildBasedChannel, ThreadChannel>;
  * @returns Le salon créé ou réutilisé
  */
 async function createOrReuseChannel(guild: Guild, options: GuildChannelCreateOptions): Promise<NonThreadGuildChannel> {
-  // Recherche d'un salon existant avec le même nom (emoji inclus)
   const existingChannel = guild.channels.cache.find(
-    (channel): channel is NonThreadGuildChannel => channel.name === options.name && 
-    !channel.isThread() &&
-    (options.parent ? channel.parentId === options.parent : true)
+    (channel): channel is NonThreadGuildChannel =>
+      channel.name === options.name &&
+      !channel.isThread()
   );
 
   if (existingChannel) {
     console.log(`Réutilisation du salon existant: ${existingChannel.name}`);
-    
-    // Création d'un objet avec uniquement les propriétés compatibles avec edit
-    const editOptions = {
-      topic: options.topic,
-      nsfw: options.nsfw,
-      bitrate: options.bitrate,
-      userLimit: options.userLimit,
-      rateLimitPerUser: options.rateLimitPerUser,
-      permissionOverwrites: options.permissionOverwrites
-    };
+
+    // Déplacer le salon si la position est définie
+    if (options.position !== undefined) {
+      await existingChannel.setPosition(options.position);
+    }
+
+    const { type, ...editOptions } = options;
     
     // Mise à jour des paramètres compatibles
     await existingChannel.edit(editOptions);
