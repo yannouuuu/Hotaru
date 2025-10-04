@@ -139,7 +139,7 @@ export const addVerifiedUser = (userId: string, email: string): void => {
 
 export const isUserVerified = (userId: string): boolean => {
   const stmt = db.prepare('SELECT * FROM verified_users WHERE userId = ?');
-  return stmt.get(userId) !== null;
+  return stmt.get(userId) != null;
 };
 
 export const getVerifiedUser = (userId: string): { userId: string; email: string; verifiedAt: number } | undefined => {
