@@ -10,6 +10,7 @@ import {
   Guild,
   GuildChannelCreateOptions,
   TextChannel,
+  ForumChannel,
   StringSelectMenuBuilder,
   StringSelectMenuOptionBuilder
 } from 'discord.js';
@@ -529,10 +530,10 @@ const command: Command = {
       // ========== 📚 COURS & ENTRAIDE ==========
       const channelAideDevoirs = await createOrReuseChannel(guild, {
         name: '📝┃aide-devoirs',
-        type: ChannelType.GuildText,
+        type: ChannelType.GuildForum,
         parent: categoryCours.id,
         topic: 'Besoin d\'aide sur un devoir ? Demandez ici !',
-      }) as TextChannel;
+      }) as ForumChannel;
 
       const channelSAE = await createOrReuseChannel(guild, {
         name: '🎯┃sae',
