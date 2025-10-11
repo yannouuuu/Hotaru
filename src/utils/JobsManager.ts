@@ -1,4 +1,4 @@
-import { Colors, EmbedBuilder, time, TimestampStyles, type GuildTextBasedChannel, type Snowflake } from 'discord.js';
+import { Colors, EmbedBuilder, time, TimestampStyles, PermissionFlagsBits, type GuildTextBasedChannel, type Snowflake } from 'discord.js';
 import type { DiscordBot } from '../client/DiscordBot.js';
 
 interface FranceTravailAuthResponse {
@@ -45,8 +45,9 @@ interface FranceTravailOffer {
 }
 
 interface FranceTravailSearchResponse {
-    resultats: number;
-    offres: FranceTravailOffer[];
+    resultats?: FranceTravailOffer[];
+    offres?: FranceTravailOffer[];
+    nombreResultats?: number;
 }
 
 export interface JobsSearchOptions {
@@ -54,9 +55,16 @@ export interface JobsSearchOptions {
     departments?: string[];
     contractTypes?: string[];
     experienceLevels?: string[];
+    communes?: string[];
+    radiusKm?: number;
+    includeAlternance?: boolean;
     limit?: number;
     minPublishedHours?: number;
 }
+
+export type FranceTravailSearchOptions = Omit<JobsSearchOptions, 'communes'> & {
+    commune?: string;
+};
 
 interface JobsFeedStore {
     knownOfferIds: string[];
@@ -72,6 +80,7 @@ export interface JobsRefreshResult {
     skipped: number;
     channelId?: Snowflake;
     error?: string;
+    notice?: string;
 }
 
 export interface JobsManagerStatus {
@@ -90,6 +99,7 @@ export interface JobsManagerStatus {
 const DEFAULT_SCOPE = 'api_offresdemploiv2 o2dsoffre';
 const DEFAULT_SEARCH_LIMIT = 5;
 const MAX_STORED_OFFERS = 200;
+const DEFAULT_COMMUNES = ['59350', '59009', '59599', '59343'];
 
 const formatDateForFranceTravail = (date: Date): string =>
     date.toISOString().replace(/\.\d{3}Z$/, 'Z');
@@ -145,7 +155,7 @@ export class FranceTravailClient {
         return this.token as string;
     }
 
-    public async searchOffers(options: JobsSearchOptions): Promise<FranceTravailOffer[]> {
+    public async searchOffers(options: FranceTravailSearchOptions): Promise<FranceTravailOffer[]> {
         const token = await this.ensureToken();
         const searchParams = new URLSearchParams();
 
@@ -168,6 +178,18 @@ export class FranceTravailClient {
             searchParams.set('experience', options.experienceLevels.join(','));
         }
 
+        if (options.commune) {
+            searchParams.set('commune', options.commune);
+        }
+
+        if (typeof options.radiusKm === 'number' && Number.isFinite(options.radiusKm) && options.radiusKm > 0) {
+            searchParams.set('rayon', Math.round(options.radiusKm).toString());
+        }
+
+        if (typeof options.includeAlternance === 'boolean') {
+            searchParams.set('alternance', options.includeAlternance ? '1' : '0');
+        }
+
         if (typeof options.minPublishedHours === 'number') {
             const now = new Date();
             const minDate = new Date(now.getTime() - options.minPublishedHours * 3_600_000);
@@ -186,6 +208,14 @@ export class FranceTravailClient {
             }
         });
 
+        if (process.env.FRANCE_TRAVAIL_DEBUG === '1') {
+            const cloned = response.clone();
+            const debugText = await cloned.text();
+            console.log('[FranceTravail] Request URL:', url);
+            console.log('[FranceTravail] Status:', response.status);
+            console.log('[FranceTravail] Body:', debugText);
+        }
+
         if (response.status === 204) {
             return [];
         }
@@ -196,7 +226,15 @@ export class FranceTravailClient {
         }
 
         const data = await response.json() as FranceTravailSearchResponse;
-        return Array.isArray(data.offres) ? data.offres : [];
+        if (Array.isArray(data.offres) && data.offres.length > 0) {
+            return data.offres;
+        }
+
+        if (Array.isArray(data.resultats)) {
+            return data.resultats;
+        }
+
+        return [];
     }
 }
 
@@ -208,16 +246,60 @@ export class JobsManager {
     private started = false;
 
     constructor(private readonly client: DiscordBot) {
+        const parsedKeywords = process.env.FRANCE_TRAVAIL_KEYWORDS?.split(',').map((k) => k.trim()).filter(Boolean) ?? undefined;
+        const parsedDepartmentsRaw = process.env.FRANCE_TRAVAIL_DEPARTMENTS?.split(',').map((d) => d.trim()).filter(Boolean) ?? undefined;
+        const parsedContracts = process.env.FRANCE_TRAVAIL_CONTRACTS?.split(',').map((c) => c.trim()).filter(Boolean) ?? undefined;
+        const parsedExperience = process.env.FRANCE_TRAVAIL_EXPERIENCE?.split(',').map((e) => e.trim()).filter(Boolean) ?? undefined;
+        const parsedCommunesRaw = process.env.FRANCE_TRAVAIL_COMMUNES?.split(',').map((c) => c.trim()).filter(Boolean) ?? undefined;
+
+    let parsedDepartments: string[] | undefined = parsedDepartmentsRaw ? [] : undefined;
+    let parsedCommunes: string[] | undefined = parsedCommunesRaw ? [...parsedCommunesRaw] : undefined;
+
+        if (parsedDepartmentsRaw) {
+            const inferredCommunes: string[] = [];
+            for (const entry of parsedDepartmentsRaw) {
+                if (/^\d{5}$/.test(entry)) {
+                    inferredCommunes.push(entry);
+                    continue;
+                }
+                (parsedDepartments as string[]).push(entry);
+            }
+
+            if (inferredCommunes.length) {
+                console.warn(`⚠️ FRANCE_TRAVAIL_DEPARTMENTS contient ${inferredCommunes.length} code(s) commune (INSEE). Ils ont été déplacés vers FRANCE_TRAVAIL_COMMUNES pour éviter les erreurs 400.`);
+                if (!parsedCommunes) {
+                    parsedCommunes = [...inferredCommunes];
+                } else {
+                    parsedCommunes.push(...inferredCommunes);
+                }
+            }
+
+            if (parsedDepartments && parsedDepartments.length === 0) {
+                parsedDepartments = undefined;
+            }
+        }
+
+        if (parsedCommunes && parsedCommunes.length === 0) {
+            parsedCommunes = undefined;
+        }
+
+        const parsedLimit = Number.parseInt(process.env.FRANCE_TRAVAIL_LIMIT || '', 10);
+        const parsedRadius = Number.parseFloat(process.env.FRANCE_TRAVAIL_RADIUS_KM || '');
+        const parsedMinHours = process.env.FRANCE_TRAVAIL_MIN_HOURS ? Number(process.env.FRANCE_TRAVAIL_MIN_HOURS) : NaN;
+        const includeAlternanceEnv = process.env.FRANCE_TRAVAIL_INCLUDE_ALTERNANCE;
+
         this.searchOptions = {
-            keywords: process.env.FRANCE_TRAVAIL_KEYWORDS?.split(',').map((k) => k.trim()).filter(Boolean) ?? ['informatique', 'développeur'],
-            departments: process.env.FRANCE_TRAVAIL_DEPARTMENTS?.split(',').map((d) => d.trim()).filter(Boolean) ?? ['59'],
-            contractTypes: process.env.FRANCE_TRAVAIL_CONTRACTS?.split(',').map((c) => c.trim()).filter(Boolean) ?? ['CDI', 'CDD', 'MIS'],
-            experienceLevels: process.env.FRANCE_TRAVAIL_EXPERIENCE?.split(',').map((e) => e.trim()).filter(Boolean) ?? undefined,
-            limit: Number.parseInt(process.env.FRANCE_TRAVAIL_LIMIT || '', 10) || DEFAULT_SEARCH_LIMIT,
-            minPublishedHours: (() => {
-                const value = process.env.FRANCE_TRAVAIL_MIN_HOURS ? Number(process.env.FRANCE_TRAVAIL_MIN_HOURS) : NaN;
-                return Number.isFinite(value) ? value : undefined;
-            })()
+            keywords: parsedKeywords && parsedKeywords.length ? parsedKeywords : ['informatique', 'développeur'],
+            departments: parsedDepartments && parsedDepartments.length ? parsedDepartments : ['59'],
+            contractTypes: parsedContracts && parsedContracts.length ? parsedContracts : ['CDI', 'CDD', 'MIS'],
+            experienceLevels: parsedExperience && parsedExperience.length ? parsedExperience : undefined,
+            communes: parsedCommunes && parsedCommunes.length ? parsedCommunes : DEFAULT_COMMUNES,
+            radiusKm: Number.isFinite(parsedRadius) && parsedRadius > 0 ? parsedRadius : 5,
+            includeAlternance: typeof includeAlternanceEnv === 'string'
+                ? ['1', 'true', 'oui', 'yes'].includes(includeAlternanceEnv.trim().toLowerCase())
+                : false,
+            limit: Number.isFinite(parsedLimit) && parsedLimit > 0 ? parsedLimit : DEFAULT_SEARCH_LIMIT,
+            minPublishedHours: Number.isFinite(parsedMinHours) && parsedMinHours > 0 ? parsedMinHours : undefined
         };
 
         const intervalMinutes = Number.parseInt(process.env.FRANCE_TRAVAIL_UPDATE_INTERVAL || '', 10);
@@ -225,7 +307,13 @@ export class JobsManager {
 
         const clientId = process.env.FRANCE_TRAVAIL_CLIENT_ID;
         const clientSecret = process.env.FRANCE_TRAVAIL_CLIENT_SECRET;
-        const scope = process.env.FRANCE_TRAVAIL_SCOPE || DEFAULT_SCOPE;
+        const scope = (() => {
+            const rawScope = process.env.FRANCE_TRAVAIL_SCOPE?.trim();
+            if (rawScope && rawScope.length > 0) {
+                return rawScope;
+            }
+            return clientId ? `${DEFAULT_SCOPE} application_${clientId}` : DEFAULT_SCOPE;
+        })();
 
         if (clientId && clientSecret) {
             this.franceTravailClient = new FranceTravailClient(clientId, clientSecret, scope);
@@ -311,16 +399,70 @@ export class JobsManager {
         }
 
         const store = this.ensureStore(guildId);
-        let offers: FranceTravailOffer[] = [];
 
-        try {
-            offers = await this.franceTravailClient.searchOffers(this.searchOptions);
-        } catch (error) {
-            const message = error instanceof Error ? error.message : String(error);
-            store.lastError = message;
-            store.lastFetchAt = Date.now();
-            this.saveStore(guildId, store);
-            return { guildId, fetched: 0, published: 0, skipped: 0, channelId, error: message };
+        const cloneOptions = (options: JobsSearchOptions): JobsSearchOptions => ({
+            ...options,
+            keywords: options.keywords ? [...options.keywords] : undefined,
+            departments: options.departments ? [...options.departments] : undefined,
+            contractTypes: options.contractTypes ? [...options.contractTypes] : undefined,
+            experienceLevels: options.experienceLevels ? [...options.experienceLevels] : undefined,
+            communes: options.communes ? [...options.communes] : undefined
+        });
+
+        const attempts: Array<{ options: JobsSearchOptions; notice?: string }> = [
+            { options: cloneOptions(this.searchOptions) },
+            {
+                options: {
+                    ...cloneOptions(this.searchOptions),
+                    keywords: undefined
+                },
+                notice: 'Aucun résultat avec les mots-clés actuels. Tentative sans filtre de mots-clés.'
+            },
+            {
+                options: {
+                    ...cloneOptions(this.searchOptions),
+                    keywords: undefined,
+                    contractTypes: undefined,
+                    experienceLevels: undefined,
+                    radiusKm: Math.max(this.searchOptions.radiusKm ?? 5, 15),
+                    minPublishedHours: Math.max(this.searchOptions.minPublishedHours ?? 0, 336)
+                },
+                notice: 'Recherche élargie en augmentant le rayon et la fenêtre temporelle.'
+            },
+            {
+                options: {
+                    ...cloneOptions(this.searchOptions),
+                    keywords: undefined,
+                    contractTypes: undefined,
+                    experienceLevels: undefined,
+                    communes: undefined,
+                    radiusKm: undefined,
+                    minPublishedHours: undefined
+                },
+                notice: 'Recherche étendue à l’ensemble du département (sans commune spécifique).'
+            }
+        ];
+
+        let offers: FranceTravailOffer[] = [];
+        let diagnosticNotice: string | undefined;
+
+        for (const attempt of attempts) {
+            try {
+                offers = await this.collectOffers(attempt.options);
+            } catch (error) {
+                const message = error instanceof Error ? error.message : String(error);
+                store.lastError = message;
+                store.lastFetchAt = Date.now();
+                this.saveStore(guildId, store);
+                return { guildId, fetched: 0, published: 0, skipped: 0, channelId, error: message };
+            }
+
+            if (offers.length > 0) {
+                diagnosticNotice = attempt === attempts[0] ? undefined : attempt.notice;
+                break;
+            }
+
+            diagnosticNotice = attempt.notice;
         }
 
         const newOffers = offers
@@ -335,9 +477,16 @@ export class JobsManager {
 
         if (newOffers.length === 0) {
             store.lastFetchAt = Date.now();
-            store.lastError = undefined;
+            store.lastError = diagnosticNotice || undefined;
             this.saveStore(guildId, store);
-            return { guildId, fetched: offers.length, published: 0, skipped, channelId };
+            return {
+                guildId,
+                fetched: offers.length,
+                published: 0,
+                skipped,
+                channelId,
+                notice: diagnosticNotice
+            };
         }
 
         const textChannel = channel.isThread() ? channel.parent : channel;
@@ -350,6 +499,23 @@ export class JobsManager {
             return { guildId, fetched: offers.length, published: 0, skipped, channelId, error: 'Jobs channel is not a guild text channel' };
         }
 
+        const me = guild.members.me ?? (this.client.user ? await guild.members.fetch(this.client.user.id).catch(() => null) : null);
+        const permissions = me ? guildTextChannel.permissionsFor(me) : null;
+
+        if (!permissions || !permissions.has(PermissionFlagsBits.ViewChannel) || !permissions.has(PermissionFlagsBits.SendMessages)) {
+            store.lastFetchAt = Date.now();
+            store.lastError = 'Hotaru ne possède pas les permissions nécessaires pour publier dans le salon jobs.';
+            this.saveStore(guildId, store);
+            return {
+                guildId,
+                fetched: offers.length,
+                published: 0,
+                skipped,
+                channelId,
+                error: 'Missing permissions to send messages in the jobs channel'
+            };
+        }
+
         await this.publishOffers(guildTextChannel, newOffers, context.reason);
 
         store.knownOfferIds = [...newOffers.map((offer) => offer.id), ...store.knownOfferIds].slice(0, MAX_STORED_OFFERS);
@@ -358,7 +524,14 @@ export class JobsManager {
         store.lastError = undefined;
         this.saveStore(guildId, store);
 
-        return { guildId, fetched: offers.length, published: newOffers.length, skipped, channelId };
+        return {
+            guildId,
+            fetched: offers.length,
+            published: newOffers.length,
+            skipped,
+            channelId,
+            notice: diagnosticNotice
+        };
     }
 
     public getStatus(guildId: Snowflake): JobsManagerStatus {
@@ -378,6 +551,54 @@ export class JobsManager {
             updateIntervalMs: this.updateInterval,
             searchOptions: this.searchOptions
         };
+    }
+
+    private async collectOffers(options: JobsSearchOptions): Promise<FranceTravailOffer[]> {
+        if (!this.franceTravailClient) {
+            return [];
+        }
+
+        const { communes, ...rest } = options;
+        const baseOptions: FranceTravailSearchOptions = { ...rest };
+        const seen = new Set<string>();
+        const aggregated: FranceTravailOffer[] = [];
+
+        const fetchForCommune = async (commune?: string) => {
+            const requestOptions: FranceTravailSearchOptions = { ...baseOptions };
+            if (commune) {
+                requestOptions.commune = commune;
+                delete (requestOptions as Partial<FranceTravailSearchOptions>).departments;
+            } else {
+                delete (requestOptions as Partial<FranceTravailSearchOptions>).radiusKm;
+            }
+
+            const partial = await this.franceTravailClient!.searchOffers(requestOptions);
+            for (const offer of partial) {
+                if (!offer?.id || seen.has(offer.id)) {
+                    continue;
+                }
+                seen.add(offer.id);
+                aggregated.push(offer);
+            }
+        };
+
+        if (communes?.length) {
+            for (const commune of communes) {
+                await fetchForCommune(commune);
+                // Avoid hitting the API too quickly when iterating over communes
+                await new Promise((resolve) => setTimeout(resolve, 200));
+            }
+        } else {
+            await fetchForCommune();
+        }
+
+        aggregated.sort((a, b) => {
+            const dateA = a.dateCreation ? new Date(a.dateCreation).getTime() : 0;
+            const dateB = b.dateCreation ? new Date(b.dateCreation).getTime() : 0;
+            return dateB - dateA;
+        });
+
+        return aggregated;
     }
 
     private async publishOffers(channel: GuildTextBasedChannel, offers: FranceTravailOffer[], reason: string): Promise<void> {

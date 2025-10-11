@@ -32,7 +32,7 @@ export default new ApplicationCommand({
         if (!interaction.inGuild() || !interaction.guildId) {
             await interaction.reply({
                 content: '❌ Cette commande doit être utilisée dans un serveur.',
-                ephemeral: true
+                flags: 64
             });
             return;
         }
@@ -40,7 +40,7 @@ export default new ApplicationCommand({
         if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) {
             await interaction.reply({
                 content: '❌ Vous n\'avez pas la permission de gérer les offres d\'emploi.',
-                ephemeral: true
+                flags: 64
             });
             return;
         }
@@ -48,7 +48,7 @@ export default new ApplicationCommand({
         const subcommand = interaction.options.getSubcommand();
 
         if (subcommand === 'refresh') {
-            await interaction.deferReply({ ephemeral: true });
+            await interaction.deferReply({ flags: 64 });
             const result = await client.jobsManager.refreshGuild(interaction.guildId, { reason: 'manual' });
 
             if (result.error) {
@@ -58,8 +58,16 @@ export default new ApplicationCommand({
                 return;
             }
 
+            const lines = [
+                `✅ Rafraîchissement terminé : ${result.published} nouvelle(s) offre(s) publiée(s), ${result.skipped} ignorée(s).`
+            ];
+
+            if (result.notice) {
+                lines.push(`ℹ️ ${result.notice}`);
+            }
+
             await interaction.editReply({
-                content: `✅ Rafraîchissement terminé : ${result.published} nouvelle(s) offre(s) publiée(s), ${result.skipped} ignorée(s).`
+                content: lines.join('\n')
             });
             return;
         }
@@ -87,7 +95,7 @@ export default new ApplicationCommand({
 
             await interaction.reply({
                 content: lines.join('\n'),
-                ephemeral: true
+                flags: 64
             });
             return;
         }

@@ -46,9 +46,12 @@ jobs_feed_{guildId}:
   lastFetchAt: 1731175200000
   lastPublishAt: 1731175260000
   lastError: null
+FRANCE_TRAVAIL_COMMUNES=59350,59009,59599,59343
 ```
 
 - `knownOfferIds` : dernières offres déjà publiées (limité à 200).
+FRANCE_TRAVAIL_RADIUS_KM=5
+FRANCE_TRAVAIL_INCLUDE_ALTERNANCE=false
 - `lastFetchAt` : date du dernier appel à l'API France Travail.
 - `lastPublishAt` : date de la dernière publication dans Discord.
 - `lastError` : message d'erreur de la dernière tentative (si échec).
@@ -56,6 +59,7 @@ jobs_feed_{guildId}:
 ## ❗ Dépannage
 
 - **Pas de nouvelles offres publiées** : vérifiez que l'intervalle est raisonnable (`FRANCE_TRAVAIL_UPDATE_INTERVAL`) et que les critères (`FRANCE_TRAVAIL_KEYWORDS`, `FRANCE_TRAVAIL_DEPARTMENTS`, etc.) ne sont pas trop restrictifs.
+- **Message "Recherche élargie" dans `/jobs refresh`** : aucun résultat n'a été trouvé avec vos filtres. Le bot tente automatiquement une recherche plus large (sans mots-clés puis sans filtres). Ajustez vos variables d'environnement pour affiner les résultats.
 - **Erreur d'authentification** : confirmez que `FRANCE_TRAVAIL_CLIENT_ID` et `FRANCE_TRAVAIL_CLIENT_SECRET` sont valides et que votre application dispose des droits sur l'API.
 - **Salon introuvable** : relancez `/setup` ou mettez à jour la base (`setup_{guildId}`) avec l'identifiant correct du salon jobs.
 

@@ -324,6 +324,15 @@ export class SetupManager {
                             {
                                 roleId: roles.jobs,
                                 allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages]
+                            },
+                            {
+                                roleId: roles.hotaru,
+                                allow: [
+                                    PermissionFlagsBits.ViewChannel,
+                                    PermissionFlagsBits.SendMessages,
+                                    PermissionFlagsBits.EmbedLinks,
+                                    PermissionFlagsBits.AttachFiles
+                                ]
                             }
                         ]
                     },
