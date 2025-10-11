@@ -1,0 +1,17 @@
+# Bun Configuration File
+# https://bun.sh/docs/runtime/bunfig
+
+[run]
+# Enable hot reload by default in development
+hot = true
+
+[install]
+# Use exact versions instead of caret ranges
+exact = false
+
+# Auto install peer dependencies
+peer = true
+
+[test]
+# Test configuration
+preload = []

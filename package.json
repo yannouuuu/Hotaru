@@ -1,0 +1,33 @@
+{
+  "name": "hotaru",
+  "version": "1.0.0",
+  "description": "A modern Discord bot built with Discord.js v14 and TypeScript, powered by Bun.",
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "start": "bun run src/index.ts",
+    "dev": "bun --watch src/index.ts",
+    "build": "bun build src/index.ts --outdir ./dist --target bun",
+    "typecheck": "tsc --noEmit",
+    "email:test": "bun run src/utils/test-email-design.ts",
+    "email:preview": "start email-preview.html"
+  },
+  "keywords": [
+    "discord",
+    "bot",
+    "typescript",
+    "bun",
+    "discord.js"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "discord.js": "^14.17.0",
+    "quick-yaml.db": "^1.2.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "bun-types": "^1.0.0",
+    "typescript": "^5.9.3"
+  }
+}
