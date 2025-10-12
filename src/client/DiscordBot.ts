@@ -8,6 +8,7 @@ import { ComponentsListener } from './handler/ComponentsListener.js';
 import { EventsHandler } from './handler/EventsHandler.js';
 // @ts-expect-error quick-yaml.db publishes incomplete type definitions
 import { QuickYAML } from 'quick-yaml.db';
+import { existsSync, writeFileSync } from 'fs';
 import type { ApplicationCommandData } from '../structure/ApplicationCommand.js';
 import type { MessageCommandData } from '../structure/MessageCommand.js';
 import type { ComponentData } from '../structure/Component.js';
@@ -68,6 +69,13 @@ export class DiscordBot extends Client {
         this.commands_handler = new CommandsHandler(this);
         this.components_handler = new ComponentsHandler(this);
         this.events_handler = new EventsHandler(this);
+    
+        // Créer le fichier database.yml s'il n'existe pas (pour Heroku)
+        if (!existsSync(config.database.path)) {
+            writeFileSync(config.database.path, '# Hotaru Database\n', 'utf-8');
+            console.log('✅ Fichier database.yml créé');
+        }
+        
         this.database = new QuickYAML(config.database.path);
         this.jobsManager = new JobsManager(this);
         this.reminderService = new ReminderService(this);
