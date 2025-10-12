@@ -87,12 +87,14 @@ export interface SetupData {
         annonces: string;
         roles: string;
         informations: string;
+        rankingProfs: string;
         animations: string;
         
         // Discussions
         general: string;
         gossip: string;
         pictures: string;
+        wordle: string;
         citationsProfs: string;
         commandes: string;
         sondages: string;

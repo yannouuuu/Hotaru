@@ -181,7 +181,7 @@ export class SetupManager {
                         topic: 'Règlement du serveur - À lire obligatoirement'
                     },
                     {
-                        name: '📢┃annonces',
+                        name: '📢・annonces',
                         type: ChannelType.GuildText,
                         topic: 'Annonces importantes du serveur',
                         permissions: [
@@ -212,7 +212,17 @@ export class SetupManager {
                             },
                             {
                                 roleId: roles.verifie,
-                                allow: [PermissionFlagsBits.ViewChannel]
+                                allow: [PermissionFlagsBits.ViewChannel],
+                                deny: [PermissionFlagsBits.SendMessages]
+                            },
+                            {
+                                roleId: roles.hotaru,
+                                allow: [
+                                    PermissionFlagsBits.ViewChannel,
+                                    PermissionFlagsBits.SendMessages,
+                                    PermissionFlagsBits.EmbedLinks,
+                                    PermissionFlagsBits.AttachFiles
+                                ]
                             }
                         ]
                     },
@@ -246,7 +256,17 @@ export class SetupManager {
                             },
                             {
                                 roleId: roles.verifie,
-                                allow: [PermissionFlagsBits.ViewChannel]
+                                allow: [PermissionFlagsBits.ViewChannel],
+                                deny: [PermissionFlagsBits.SendMessages]
+                            },
+                            {
+                                roleId: roles.hotaru,
+                                allow: [
+                                    PermissionFlagsBits.ViewChannel,
+                                    PermissionFlagsBits.SendMessages,
+                                    PermissionFlagsBits.EmbedLinks,
+                                    PermissionFlagsBits.AttachFiles
+                                ]
                             }
                         ]
                     }
@@ -288,6 +308,11 @@ export class SetupManager {
                         topic: 'Partagez vos photos ici'
                     },
                     {
+                        name: '🟩・wordle',
+                        type: ChannelType.GuildText,
+                        topic: 'Jouez au Wordle du jour'
+                    },
+                    {
                         name: '💭・citations-profs',
                         type: ChannelType.GuildText,
                         topic: 'Les meilleures citations de vos profs'
@@ -300,7 +325,27 @@ export class SetupManager {
                     {
                         name: '📊・sondages',
                         type: ChannelType.GuildText,
-                        topic: 'Sondages et votes'
+                        topic: 'Sondages et votes',
+                        permissions: [
+                            {
+                                roleId: everyoneId,
+                                deny: [PermissionFlagsBits.ViewChannel]
+                            },
+                            {
+                                roleId: roles.verifie,
+                                allow: [PermissionFlagsBits.ViewChannel],
+                                deny: [PermissionFlagsBits.SendMessages]
+                            },
+                            {
+                                roleId: roles.hotaru,
+                                allow: [
+                                    PermissionFlagsBits.ViewChannel,
+                                    PermissionFlagsBits.SendMessages,
+                                    PermissionFlagsBits.EmbedLinks,
+                                    PermissionFlagsBits.AttachFiles
+                                ]
+                            }
+                        ]
                     },
                     {
                         name: '😂・memes',
