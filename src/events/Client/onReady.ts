@@ -25,5 +25,9 @@ export default new Event({
         if (__client__.professorRankingManager) {
             __client__.professorRankingManager.start();
         }
+
+        if (__client__.agendaManager) {
+            __client__.agendaManager.start();
+        }
     }
 }).toJSON();

@@ -1,4 +1,4 @@
-import { Client, Collection, Partials, type ActivitiesOptions } from 'discord.js';
+import { Client, Collection, Partials, ActivityType, type ActivitiesOptions } from 'discord.js';
 import { CommandsHandler } from './handler/CommandsHandler.js';
 import { warn, error, success } from '../utils/Console.js';
 import { config } from '../config.js';
@@ -16,6 +16,7 @@ import { JobsManager } from '../utils/JobsManager.js';
 import { ReminderService } from '../utils/reminders/ReminderService.js';
 import { ScheduleManager } from '../utils/ScheduleManager.js';
 import { ProfessorRankingManager } from '../utils/ProfessorRankingManager.js';
+import { AgendaManager } from '../utils/AgendaManager.js';
 
 export class DiscordBot extends Client {
     public collection = {
@@ -33,11 +34,7 @@ export class DiscordBot extends Client {
     public rest_application_commands_array: any[] = [];
     public login_attempts = 0;
     public login_timestamp = 0;
-    public statusMessages: ActivitiesOptions[] = [
-        { name: 'Status 1', type: 4 },
-        { name: 'Status 2', type: 4 },
-        { name: 'Status 3', type: 4 }
-    ];
+    public statusMessages: ActivitiesOptions[] = [];
 
     public commands_handler: CommandsHandler;
     public components_handler: ComponentsHandler;
@@ -47,6 +44,7 @@ export class DiscordBot extends Client {
     public reminderService: ReminderService;
     public scheduleManager: ScheduleManager;
     public professorRankingManager: ProfessorRankingManager;
+    public agendaManager: AgendaManager;
 
     constructor() {
         super({
@@ -75,6 +73,7 @@ export class DiscordBot extends Client {
     this.reminderService = new ReminderService(this);
     this.scheduleManager = new ScheduleManager(this);
     this.professorRankingManager = new ProfessorRankingManager(this);
+    this.agendaManager = new AgendaManager(this);
 
         new CommandsListener(this);
         new ComponentsListener(this);
@@ -82,16 +81,93 @@ export class DiscordBot extends Client {
 
     public startStatusRotation = (): void => {
         let index = 0;
+        this.refreshIdleStatuses();
         setInterval(() => {
             if (this.scheduleManager?.hasPresenceMode()) {
                 return;
             }
             if (this.user) {
-                this.user.setPresence({ activities: [this.statusMessages[index]] });
+                if (!this.statusMessages.length) {
+                    this.refreshIdleStatuses();
+                }
+
+                const payload = this.statusMessages[index];
+                if (!payload) {
+                    index = 0;
+                    return;
+                }
+
+                this.user.setPresence({
+                    activities: [payload],
+                    status: 'online'
+                });
                 index = (index + 1) % this.statusMessages.length;
+                if (index === 0) {
+                    this.refreshIdleStatuses();
+                }
             }
         }, 4000);
     };
+
+    private refreshIdleStatuses(): void {
+        const statuses = this.buildIdleStatuses();
+        if (statuses.length === 0) {
+            statuses.push({
+                name: 'Hotaru',
+                type: ActivityType.Custom,
+                state: 'Besoin d\'un coup de main ? /help'
+            });
+        }
+        this.statusMessages = statuses;
+    }
+
+    private buildIdleStatuses(): ActivitiesOptions[] {
+        const guildCount = this.guilds.cache.size;
+        const memberCount = this.guilds.cache.reduce((total, guild) => total + (guild.memberCount ?? 0), 0);
+        const applicationCommands = this.collection.application_commands.size;
+        const prefixCommands = this.collection.message_commands.size;
+        const totalCommands = applicationCommands + prefixCommands;
+
+        const campusStatus = guildCount <= 1
+            ? 'sur un campus connecté'
+            : `sur ${guildCount} campus connectés`;
+
+        const studentStatus = memberCount <= 10
+            ? 'vos projets étudiants'
+            : `${memberCount} étudiants accompagnés`;
+
+        const commandStatus = totalCommands <= 1
+            ? "l'atelier Hotaru"
+            : `${totalCommands} commandes Hotaru`;
+
+        return [
+            {
+                name: 'Hotaru',
+                type: ActivityType.Custom,
+                state: 'Besoin d\'un coup de main ? /help'
+            },
+            {
+                name: campusStatus,
+                type: ActivityType.Watching
+            },
+            {
+                name: studentStatus,
+                type: ActivityType.Listening
+            },
+            {
+                name: commandStatus,
+                type: ActivityType.Playing
+            },
+            {
+                name: '/setup votre serveur',
+                type: ActivityType.Competing
+            },
+            {
+                name: '/ai-chat avec le campus',
+                type: ActivityType.Playing
+            }
+        ];
+    }
 
     public connect = async (): Promise<void> => {
         warn(`Attempting to connect to the Discord bot... (${this.login_attempts + 1})`);

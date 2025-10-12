@@ -1,4 +1,4 @@
-import { ApplicationCommandType, ApplicationCommandOptionType, MessageFlags } from 'discord.js';
+import { ApplicationCommandType, ApplicationCommandOptionType } from 'discord.js';
 import type { DiscordBot } from '../../client/DiscordBot.js';
 import { ApplicationCommand } from '../../structure/ApplicationCommand.js';
 import { executeAiCommand, sendAiResult } from '../../utils/aiCommandRunner.js';
@@ -40,6 +40,12 @@ export default new ApplicationCommand({
                     { name: 'C', value: 'C' },
                 ]
             },
+            {
+                name: 'prive',
+                description: 'Réponse visible uniquement pour vous.',
+                type: ApplicationCommandOptionType.Boolean,
+                required: false
+            }
         ]
     },
     options: {
@@ -48,10 +54,11 @@ export default new ApplicationCommand({
     run: async (_client: DiscordBot, interaction) => {
         if (!interaction.isChatInputCommand()) return;
 
-        const need = interaction.options.getString('besoin', true);
-        const language = interaction.options.getString('langage') ?? 'Langage approprié';
+    const need = interaction.options.getString('besoin', true);
+    const language = interaction.options.getString('langage') ?? 'Langage approprié';
+    const isPrivate = interaction.options.getBoolean('prive') ?? false;
 
-        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    await interaction.deferReply({ ephemeral: isPrivate });
 
         try {
             const userPrompt = [
@@ -69,7 +76,7 @@ export default new ApplicationCommand({
                 maxTokens: 1200
             });
 
-            await sendAiResult(interaction, result);
+            await sendAiResult(interaction, result, { ephemeral: isPrivate });
         } catch (error) {
             const message = error instanceof AiProviderError
                 ? error.message

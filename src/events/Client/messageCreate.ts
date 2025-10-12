@@ -1,4 +1,4 @@
-import { PermissionFlagsBits } from 'discord.js';
+import { EmbedBuilder, PermissionFlagsBits } from 'discord.js';
 import { Event } from '../../structure/Event.js';
 import { SetupManager } from '../../utils/SetupManager.js';
 
@@ -38,8 +38,40 @@ export default new Event({
         }
 
         const member = message.member;
-        if (member?.permissions.has(PermissionFlagsBits.ManageMessages)) {
-            return;
+        const canModerate = member?.permissions.has(PermissionFlagsBits.ManageMessages) ?? false;
+        const annoncesId = channelsMap.annonces;
+
+        if (annoncesId && message.channelId === annoncesId) {
+            const isAdmin = member?.permissions.has(PermissionFlagsBits.ManageGuild) ?? false;
+
+            if (isAdmin) {
+                const files = Array.from(message.attachments.values()).map(attachment => ({
+                    attachment: attachment.url,
+                    name: attachment.name ?? 'attachment'
+                }));
+
+                const baseContent = message.content?.trim();
+                const forwardedContent = baseContent && baseContent.length > 0
+                    ? `@everyone\n${baseContent}`
+                    : '@everyone';
+
+                const embeds = message.embeds.length
+                    ? message.embeds.map(embed => EmbedBuilder.from(embed).toJSON())
+                    : undefined;
+
+                await message.channel.send({
+                    content: forwardedContent,
+                    embeds,
+                    files: files.length ? files : undefined,
+                    allowedMentions: { parse: ['everyone'] }
+                }).catch(() => undefined);
+
+                if (message.deletable) {
+                    await message.delete().catch(() => undefined);
+                }
+
+                return;
+            }
         }
 
         const sendNotice = async (notice: string) => {
@@ -57,6 +89,9 @@ export default new Event({
         };
 
         if (readOnlyIds.has(message.channelId)) {
+            if (canModerate) {
+                return;
+            }
             if (message.deletable) {
                 await message.delete().catch(() => undefined);
             }
@@ -66,6 +101,10 @@ export default new Event({
         }
 
         if (!linkOnlyIds.has(message.channelId)) {
+            return;
+        }
+
+        if (canModerate) {
             return;
         }
 

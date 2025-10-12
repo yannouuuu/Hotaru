@@ -1,4 +1,4 @@
-import { ApplicationCommandType, ApplicationCommandOptionType, MessageFlags } from 'discord.js';
+import { ApplicationCommandType, ApplicationCommandOptionType } from 'discord.js';
 import type { DiscordBot } from '../../client/DiscordBot.js';
 import { ApplicationCommand } from '../../structure/ApplicationCommand.js';
 import { executeAiCommand, sendAiResult } from '../../utils/aiCommandRunner.js';
@@ -17,6 +17,12 @@ export default new ApplicationCommand({
                 description: 'La question ou le sujet à aborder avec l\'IA.',
                 type: ApplicationCommandOptionType.String,
                 required: true
+            },
+            {
+                name: 'prive',
+                description: 'Réponse visible uniquement pour vous.',
+                type: ApplicationCommandOptionType.Boolean,
+                required: false
             }
         ]
     },
@@ -26,9 +32,10 @@ export default new ApplicationCommand({
     run: async (_client: DiscordBot, interaction) => {
         if (!interaction.isChatInputCommand()) return;
 
-        const userMessage = interaction.options.getString('message', true);
+    const userMessage = interaction.options.getString('message', true);
+    const isPrivate = interaction.options.getBoolean('prive') ?? false;
 
-        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    await interaction.deferReply({ ephemeral: isPrivate });
 
         try {
             const result = await executeAiCommand({
@@ -40,7 +47,7 @@ export default new ApplicationCommand({
                 maxTokens: 900
             });
 
-            await sendAiResult(interaction, result);
+            await sendAiResult(interaction, result, { ephemeral: isPrivate });
         } catch (error) {
             const message = error instanceof AiProviderError
                 ? error.message

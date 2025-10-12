@@ -99,6 +99,10 @@ export class SetupMessages {
                 '**BUT 1** - Julien Baste ([julien.baste@univ-lille.fr](mailto:julien.baste@univ-lille.fr))\n' +
                 '**BUT 2** - Patricia Everaere ([patricia.everaere-caillier@univ-lille.fr](mailto:patricia.everaere-caillier@univ-lille.fr))\n' +
                 '**BUT 3** - Philippe Mathieu & Yvan Peter\n\n' +
+                '**📌 Absences :**\n' +
+                '• Prévenez ou écrivez au secrétariat de l\'IUT : [marie.ryckebosch@univ-lille.fr](mailto:marie.ryckebosch@univ-lille.fr)\n' +
+                '• Fournissez un justificatif valide sous 72h après le premier jour d\'absence\n' +
+                '• Pour un examen raté, un rattrapage est possible avec justificatif ; le secrétariat vous accompagnera pour l\'inscription (généralement un jeudi après-midi ou fin de semestre)\n\n' +
                 '💡 *Utilisez le menu déroulant ci-dessous pour accéder rapidement aux plateformes*'
             )
             .setColor(0x7289da)

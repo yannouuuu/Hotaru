@@ -77,8 +77,10 @@ export const executeAiCommand = async (
 
 export const sendAiResult = async (
     interaction: ChatInputCommandInteraction,
-    result: AiCommandExecutionResult
+    result: AiCommandExecutionResult,
+    options: { ephemeral?: boolean } = {}
 ): Promise<void> => {
+    const ephemeral = options.ephemeral ?? false;
     const [firstChunk, ...otherChunks] = result.chunks.length > 0
         ? result.chunks
         : [EMPTY_RESPONSE_FALLBACK];
@@ -91,23 +93,7 @@ export const sendAiResult = async (
     for (const chunk of otherChunks) {
         await interaction.followUp({
             content: chunk,
-            flags: MessageFlags.Ephemeral,
-            allowedMentions: { parse: [] }
-        });
-    }
-
-    const summaryParts = [`Moteur : ${result.providerLabel}`];
-
-    if (result.usageSummary) {
-        summaryParts.push(`Tokens : ${result.usageSummary}`);
-    }
-
-    const summaryMessage = summaryParts.join(' · ');
-
-    if (summaryMessage) {
-        await interaction.followUp({
-            content: `\u2139\ufe0f *${summaryMessage}*`,
-            flags: MessageFlags.Ephemeral,
+            flags: ephemeral ? MessageFlags.Ephemeral : undefined,
             allowedMentions: { parse: [] }
         });
     }

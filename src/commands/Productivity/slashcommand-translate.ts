@@ -1,4 +1,4 @@
-import { ApplicationCommandType, ApplicationCommandOptionType, MessageFlags } from 'discord.js';
+import { ApplicationCommandType, ApplicationCommandOptionType } from 'discord.js';
 import type { DiscordBot } from '../../client/DiscordBot.js';
 import { ApplicationCommand } from '../../structure/ApplicationCommand.js';
 import { executeAiCommand, sendAiResult } from '../../utils/aiCommandRunner.js';
@@ -47,6 +47,12 @@ export default new ApplicationCommand({
                 description: 'Langue source (détectée automatiquement sinon).',
                 type: ApplicationCommandOptionType.String,
                 required: false
+            },
+            {
+                name: 'prive',
+                description: 'Réponse visible uniquement pour vous.',
+                type: ApplicationCommandOptionType.Boolean,
+                required: false
             }
         ]
     },
@@ -56,11 +62,12 @@ export default new ApplicationCommand({
     run: async (_client: DiscordBot, interaction) => {
         if (!interaction.isChatInputCommand()) return;
 
-        const text = interaction.options.getString('texte', true);
-        const target = interaction.options.getString('cible', true) as TargetLanguageValue;
-        const source = interaction.options.getString('source')?.trim();
+    const text = interaction.options.getString('texte', true);
+    const target = interaction.options.getString('cible', true) as TargetLanguageValue;
+    const source = interaction.options.getString('source')?.trim();
+    const isPrivate = interaction.options.getBoolean('prive') ?? false;
 
-        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    await interaction.deferReply({ ephemeral: isPrivate });
 
         try {
             const targetLabel = TARGET_LABEL.get(target) ?? target;
@@ -83,7 +90,7 @@ export default new ApplicationCommand({
                 successPrefix: `**Traduction (${targetLabel})**`
             });
 
-            await sendAiResult(interaction, result);
+            await sendAiResult(interaction, result, { ephemeral: isPrivate });
         } catch (error) {
             const message = error instanceof AiProviderError
                 ? error.message

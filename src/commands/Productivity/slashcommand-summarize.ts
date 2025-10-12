@@ -1,4 +1,4 @@
-import { ApplicationCommandType, ApplicationCommandOptionType, MessageFlags } from 'discord.js';
+import { ApplicationCommandType, ApplicationCommandOptionType } from 'discord.js';
 import type { DiscordBot } from '../../client/DiscordBot.js';
 import { ApplicationCommand } from '../../structure/ApplicationCommand.js';
 import { executeAiCommand, sendAiResult } from '../../utils/aiCommandRunner.js';
@@ -38,6 +38,12 @@ export default new ApplicationCommand({
                 type: ApplicationCommandOptionType.String,
                 required: false,
                 choices: STYLE_CHOICES.map(({ name, value }) => ({ name, value }))
+            },
+            {
+                name: 'prive',
+                description: 'Réponse visible uniquement pour vous.',
+                type: ApplicationCommandOptionType.Boolean,
+                required: false
             }
         ]
     },
@@ -47,11 +53,12 @@ export default new ApplicationCommand({
     run: async (_client: DiscordBot, interaction) => {
         if (!interaction.isChatInputCommand()) return;
 
-        const text = interaction.options.getString('texte', true);
-        const style = interaction.options.getString('style') as SummaryStyleValue | null;
-        const resolvedStyle = style ?? 'short';
+    const text = interaction.options.getString('texte', true);
+    const style = interaction.options.getString('style') as SummaryStyleValue | null;
+    const resolvedStyle = style ?? 'short';
+    const isPrivate = interaction.options.getBoolean('prive') ?? false;
 
-        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    await interaction.deferReply({ ephemeral: isPrivate });
 
         try {
             const instructions = STYLE_DESCRIPTIONS[resolvedStyle];
@@ -71,7 +78,7 @@ export default new ApplicationCommand({
                 successPrefix: resolvedStyle === 'bullets' ? '**Résumé en bullet points**' : '**Résumé**'
             });
 
-            await sendAiResult(interaction, result);
+            await sendAiResult(interaction, result, { ephemeral: isPrivate });
         } catch (error) {
             const message = error instanceof AiProviderError
                 ? error.message
