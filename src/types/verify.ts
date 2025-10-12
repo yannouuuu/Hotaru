@@ -1,10 +1,3 @@
-/**
- * Types et interfaces pour le système de vérification par email
- */
-
-/**
- * Code de vérification temporaire
- */
 export interface VerificationCode {
     code: string;
     userId: string;
@@ -14,22 +7,14 @@ export interface VerificationCode {
     expiresAt: number;
     attempts: number;
 }
-
-/**
- * Utilisateur vérifié enregistré en base de données
- */
 export interface VerifiedUser {
     userId: string;
     guildId: string;
     email: string;
     verifiedAt: number;
     verifiedBy: 'email' | 'manual';
-    verifierUserId?: string; // ID de l'admin qui a vérifié manuellement
+    verifierUserId?: string;
 }
-
-/**
- * Tentative de vérification (anti-spam)
- */
 export interface VerificationAttempt {
     userId: string;
     email: string;
@@ -37,10 +22,6 @@ export interface VerificationAttempt {
     success: boolean;
     type: 'request' | 'validation';
 }
-
-/**
- * Log de vérification pour les admins
- */
 export interface VerificationLog {
     id: string;
     userId: string;
@@ -51,19 +32,11 @@ export interface VerificationLog {
     details?: string;
     adminId?: string;
 }
-
-/**
- * Configuration des domaines d'email autorisés
- */
 export interface EmailDomainConfig {
     domain: string;
     description: string;
     enabled: boolean;
 }
-
-/**
- * Statistiques de vérification
- */
 export interface VerificationStats {
     totalVerified: number;
     verifiedToday: number;
@@ -72,40 +45,28 @@ export interface VerificationStats {
     successRate: number;
     topDomains: { domain: string; count: number }[];
 }
-
-/**
- * Configuration du système de vérification
- */
 export interface VerificationConfig {
     enabled: boolean;
     codeLength: number;
-    codeExpiration: number; // en millisecondes (15 minutes par défaut)
+    codeExpiration: number;
     maxAttemptsPerDay: number;
-    cooldownBetweenAttempts: number; // en millisecondes (5 minutes par défaut)
-    maxValidationAttempts: number; // Nombre de tentatives de validation du code
+    cooldownBetweenAttempts: number;
+    maxValidationAttempts: number;
     allowedDomains: EmailDomainConfig[];
-    requireUniqueEmail: boolean; // Un email = un compte Discord
-    verifiedRoleId?: string; // OPTIONNEL - ID du rôle "✅ Vérifié" (sinon utilisé depuis setup)
-    studentRoleId?: string; // OPTIONNEL - ID du rôle "Étudiant" (sinon utilisé depuis setup)
-    logChannelId?: string; // Channel pour les logs de vérification
-    welcomeChannelId?: string; // Channel pour le message de bienvenue
+    requireUniqueEmail: boolean;
+    verifiedRoleId?: string;
+    studentRoleId?: string;
+    logChannelId?: string;
+    welcomeChannelId?: string;
 }
-
-/**
- * Résultat d'une opération de vérification
- */
 export interface VerificationResult {
     success: boolean;
     message: string;
     code?: string;
     error?: VerificationError;
-    data?: any;
+    data?: unknown;
 }
-
-/**
- * Types d'erreurs de vérification
- */
-export type VerificationError = 
+export type VerificationError =
     | 'ALREADY_VERIFIED'
     | 'INVALID_EMAIL_FORMAT'
     | 'DOMAIN_NOT_ALLOWED'
@@ -118,18 +79,10 @@ export type VerificationError =
     | 'EMAIL_SEND_FAILED'
     | 'DATABASE_ERROR'
     | 'RATE_LIMITED';
-
-/**
- * Options pour la commande /manage-verified
- */
 export type ManageVerifiedAction = 'list' | 'remove' | 'manual-verify' | 'stats' | 'search';
-
-/**
- * Données stockées en base de données
- */
 export interface VerificationDatabase {
-    verifiedUsers: Record<string, VerifiedUser>; // userId -> VerifiedUser
-    pendingCodes: Record<string, VerificationCode>; // code -> VerificationCode
-    attempts: Record<string, VerificationAttempt[]>; // userId -> attempts
+    verifiedUsers: Record<string, VerifiedUser>;
+    pendingCodes: Record<string, VerificationCode>;
+    attempts: Record<string, VerificationAttempt[]>;
     logs: VerificationLog[];
 }

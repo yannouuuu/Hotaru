@@ -17,7 +17,7 @@ const RECURRENCE_OFFSETS: Record<ReminderRecurrence, number | ((from: number) =>
 export type ReminderExecutor = (record: ReminderRecord) => Promise<'completed' | 'reschedule'>;
 
 export class ReminderScheduler {
-    private timeouts = new Map<string, NodeJS.Timeout>();
+    private timeouts = new Map<string, ReturnType<typeof setTimeout>>();
 
     constructor(private readonly executor: ReminderExecutor) {}
 

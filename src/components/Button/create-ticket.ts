@@ -134,7 +134,7 @@ export default new Component({
                 .setTitle(`🎫 Ticket #${paddedNumber}`)
                 .setDescription(
                     `Bonjour ${member} !\n\n` +
-                    `Merci d\'avoir contacté le support. Un membre de l'équipe prendra en charge votre demande au plus vite.` +
+                    `Merci d'avoir contacté le support. Un membre de l'équipe prendra en charge votre demande au plus vite.` +
                     '\n\n__Pour accélérer le traitement :__\n' +
                     '• Décrivez votre demande de manière détaillée\n' +
                     '• Ajoutez des captures ou pièces jointes si nécessaire\n' +

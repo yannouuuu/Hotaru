@@ -1,7 +1,7 @@
 import type { Message, Interaction } from 'discord.js';
 import { MessageFlags } from 'discord.js';
 import type { MessageCommandData, MessageCommandOptions } from '../../structure/MessageCommand.js';
-import type { ApplicationCommandData, ApplicationCommandOptions } from '../../structure/ApplicationCommand.js';
+import type { ApplicationCommandOptions } from '../../structure/ApplicationCommand.js';
 import { config } from '../../config.js';
 
 const application_commands_cooldown = new Map<string, string[]>();
@@ -9,8 +9,7 @@ const message_commands_cooldown = new Map<string, string[]>();
 
 export const handleApplicationCommandOptions = async (
     interaction: Interaction,
-    options: Partial<ApplicationCommandOptions>,
-    command: ApplicationCommandData['command']
+    options: Partial<ApplicationCommandOptions>
 ): Promise<boolean> => {
     if (!interaction.isCommand()) return false;
 

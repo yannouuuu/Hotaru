@@ -1,0 +1,61 @@
+{
+  "name": "Hotaru Discord Bot",
+  "description": "A modern Discord bot built with Discord.js v14 and TypeScript, powered by Bun",
+  "repository": "https://github.com/yourusername/HotaruReborn",
+  "keywords": ["discord", "bot", "typescript", "bun", "discord.js"],
+  "buildpacks": [
+    {
+      "url": "https://github.com/xHyroM/heroku-buildpack-bun.git"
+    }
+  ],
+  "env": {
+    "CLIENT_TOKEN": {
+      "description": "Your Discord Bot Token",
+      "required": true
+    },
+    "OWNER_ID": {
+      "description": "Discord User ID of the bot owner",
+      "required": true
+    },
+    "DEVELOPER_IDS": {
+      "description": "Comma-separated Discord User IDs of developers",
+      "required": false
+    },
+    "SMTP_HOST": {
+      "description": "SMTP server host (e.g., smtp.gmail.com)",
+      "required": false
+    },
+    "SMTP_PORT": {
+      "description": "SMTP server port (e.g., 587)",
+      "required": false
+    },
+    "SMTP_SECURE": {
+      "description": "Use TLS for SMTP (true/false)",
+      "required": false
+    },
+    "SMTP_USER": {
+      "description": "SMTP authentication username",
+      "required": false
+    },
+    "SMTP_PASS": {
+      "description": "SMTP authentication password",
+      "required": false
+    },
+    "EMAIL_FROM": {
+      "description": "Email sender address",
+      "required": false
+    },
+    "FRANCE_TRAVAIL_CLIENT_ID": {
+      "description": "France Travail API Client ID",
+      "required": false
+    },
+    "FRANCE_TRAVAIL_CLIENT_SECRET": {
+      "description": "France Travail API Client Secret",
+      "required": false
+    },
+    "OPENROUTER_API_KEY": {
+      "description": "OpenRouter API Key for AI features",
+      "required": false
+    }
+  }
+}

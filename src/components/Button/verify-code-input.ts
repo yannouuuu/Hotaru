@@ -2,8 +2,7 @@ import {
     ModalBuilder,
     TextInputBuilder,
     TextInputStyle,
-    ActionRowBuilder,
-    MessageFlags
+    ActionRowBuilder
 } from 'discord.js';
 import { Component } from '../../structure/Component.js';
 import type { DiscordBot } from '../../client/DiscordBot.js';

@@ -10,15 +10,15 @@ import { DiscordBot } from './client/DiscordBot.js';
 // Clear terminal log
 try {
     fs.writeFileSync('./terminal.log', '', 'utf-8');
-} catch (err) {
-    // Ignore
+} catch {
+    // Ignore write failures during startup
 }
 
 const client = new DiscordBot();
 
 export default client;
 
-client.connect();
+void client.connect();
 
 process.on('unhandledRejection', (error) => {
     console.error('Unhandled promise rejection:', error);

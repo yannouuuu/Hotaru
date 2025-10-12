@@ -1,10 +1,7 @@
 import {
     Guild,
-    Role,
-    CategoryChannel,
     TextChannel,
     VoiceChannel,
-    ForumChannel,
     PermissionFlagsBits,
     ChannelType,
     Colors,

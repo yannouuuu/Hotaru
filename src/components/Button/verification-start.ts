@@ -1,6 +1,4 @@
 import {
-    EmbedBuilder,
-    Colors,
     MessageFlags,
     ModalBuilder,
     TextInputBuilder,

@@ -1,5 +1,4 @@
 import {
-    ButtonInteraction,
     EmbedBuilder,
     Colors,
     ChannelType

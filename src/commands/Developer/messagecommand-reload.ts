@@ -13,6 +13,7 @@ export default new MessageCommand({
         botDevelopers: true
     },
     run: async (client: DiscordBot, message: Message, args: string[]) => {
+        void args;
         let replyMessage = await message.reply({
             content: 'Please wait...'
         });

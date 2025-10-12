@@ -1,4 +1,5 @@
-import { FranceTravailClient, type JobsSearchOptions, type FranceTravailSearchOptions } from './JobsManager.js';
+import { FranceTravailClient } from './JobsManager.js';
+import type { FranceTravailSearchOptions } from '../types/jobs.js';
 
 async function main() {
     const clientId = process.env.FRANCE_TRAVAIL_CLIENT_ID;

@@ -1,5 +1,3 @@
-import type { PermissionResolvable } from 'discord.js';
-
 export interface DatabaseConfig {
     path: string;
 }

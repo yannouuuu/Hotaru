@@ -1,0 +1,10 @@
+# Ne pas inclure dans le slug Heroku pour gagner de l'espace
+*.md
+!README.md
+docs/
+.vscode/
+.idea/
+*.log
+email-preview.html
+clean-comments.ps1
+eslint.config.js

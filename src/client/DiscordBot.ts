@@ -6,7 +6,7 @@ import { CommandsListener } from './handler/CommandsListener.js';
 import { ComponentsHandler } from './handler/ComponentsHandler.js';
 import { ComponentsListener } from './handler/ComponentsListener.js';
 import { EventsHandler } from './handler/EventsHandler.js';
-// @ts-ignore - quick-yaml.db has incorrect type exports
+// @ts-expect-error quick-yaml.db publishes incomplete type definitions
 import { QuickYAML } from 'quick-yaml.db';
 import type { ApplicationCommandData } from '../structure/ApplicationCommand.js';
 import type { MessageCommandData } from '../structure/MessageCommand.js';
@@ -68,12 +68,12 @@ export class DiscordBot extends Client {
         this.commands_handler = new CommandsHandler(this);
         this.components_handler = new ComponentsHandler(this);
         this.events_handler = new EventsHandler(this);
-    this.database = new QuickYAML(config.database.path);
-    this.jobsManager = new JobsManager(this);
-    this.reminderService = new ReminderService(this);
-    this.scheduleManager = new ScheduleManager(this);
-    this.professorRankingManager = new ProfessorRankingManager(this);
-    this.agendaManager = new AgendaManager(this);
+        this.database = new QuickYAML(config.database.path);
+        this.jobsManager = new JobsManager(this);
+        this.reminderService = new ReminderService(this);
+        this.scheduleManager = new ScheduleManager(this);
+        this.professorRankingManager = new ProfessorRankingManager(this);
+        this.agendaManager = new AgendaManager(this);
 
         new CommandsListener(this);
         new ComponentsListener(this);

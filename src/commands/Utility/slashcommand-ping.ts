@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction, ApplicationCommandType } from 'discord.js';
+import { ApplicationCommandType } from 'discord.js';
 import type { DiscordBot } from '../../client/DiscordBot.js';
 import { ApplicationCommand } from '../../structure/ApplicationCommand.js';
 

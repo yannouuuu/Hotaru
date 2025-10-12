@@ -78,7 +78,7 @@ export default new ApplicationCommand({
 
             lines.push(status.hasCredentials ? '🔐 Authentification France Travail : configurée' : '🔐 Authentification France Travail : manquante');
             lines.push(status.isConfigured && status.channelId ? `💬 Salon cible : <#${status.channelId}>` : '💬 Salon cible : non configuré');
-            lines.push(`🔄 Intervalle d\'actualisation : ${(status.updateIntervalMs / 60_000).toFixed(1)} min`);
+            lines.push(`🔄 Intervalle d'actualisation : ${(status.updateIntervalMs / 60_000).toFixed(1)} min`);
             lines.push(`📦 Offres connues : ${status.knownOffers}`);
 
             if (status.lastFetchAt) {

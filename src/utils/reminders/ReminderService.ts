@@ -7,7 +7,6 @@ import type {
     CreateReminderInput,
     ReminderFilters,
     ReminderRecord,
-    ReminderRecurrence,
     ReminderStatus
 } from '../../types/reminders.js';
 

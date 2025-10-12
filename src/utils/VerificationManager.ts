@@ -1,14 +1,13 @@
-// @ts-ignore - quick-yaml.db type issues
+// @ts-expect-error quick-yaml.db publishes incomplete type definitions
 import type { QuickYAML } from 'quick-yaml.db';
-import type { Guild, GuildMember } from 'discord.js';
+import type { GuildMember } from 'discord.js';
 import type {
     VerificationCode,
     VerifiedUser,
     VerificationAttempt,
     VerificationLog,
     VerificationResult,
-    VerificationConfig,
-    VerificationError
+    VerificationConfig
 } from '../types/verify.js';
 import { emailService } from './EmailService.js';
 

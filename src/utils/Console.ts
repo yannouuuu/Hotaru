@@ -12,7 +12,7 @@ const colors = {
 const writeToLog = (message: string): void => {
     try {
         fs.appendFileSync('./terminal.log', message + '\n', 'utf-8');
-    } catch (err) {
+    } catch {
         // Ignore file write errors
     }
 };

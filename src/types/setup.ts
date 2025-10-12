@@ -1,13 +1,8 @@
-import type { 
-    ColorResolvable, 
-    ChannelType, 
-    PermissionResolvable,
-    OverwriteResolvable
+import type {
+    ColorResolvable,
+    ChannelType,
+    PermissionResolvable
 } from 'discord.js';
-
-/**
- * Configuration pour la création d'un rôle
- */
 export interface RoleConfig {
     name: string;
     color?: ColorResolvable;
@@ -18,19 +13,11 @@ export interface RoleConfig {
     mentionable?: boolean;
     position?: number;
 }
-
-/**
- * Configuration pour les permissions d'un salon
- */
 export interface ChannelPermissionConfig {
     roleId: string;
     allow?: PermissionResolvable[];
     deny?: PermissionResolvable[];
 }
-
-/**
- * Configuration pour la création d'un salon
- */
 export interface ChannelConfig {
     name: string;
     type: ChannelType;
@@ -42,10 +29,6 @@ export interface ChannelConfig {
     position?: number;
     forum?: boolean;
 }
-
-/**
- * Configuration pour la création d'une catégorie avec ses salons
- */
 export interface CategoryConfig {
     name: string;
     icon?: string;
@@ -53,10 +36,6 @@ export interface CategoryConfig {
     channels: ChannelConfig[];
     position?: number;
 }
-
-/**
- * Structure des données sauvegardées dans la base de données
- */
 export interface SetupData {
     guildId: string;
     setupDate: number;
@@ -80,7 +59,6 @@ export interface SetupData {
         moderation: string;
     };
     channels: {
-        // Système
         bienvenue: string;
         verification: string;
         reglement: string;
@@ -89,8 +67,6 @@ export interface SetupData {
         informations: string;
         rankingProfs: string;
         animations: string;
-        
-        // Discussions
         general: string;
         gossip: string;
         pictures: string;
@@ -101,23 +77,15 @@ export interface SetupData {
         memes: string;
         liensUtiles: string;
         jobs: string;
-        
-        // Vocaux
         vocal1: string;
         vocal2: string;
         vocal3: string;
         amphi: string;
-        
-        // Cours
         aideDevoirs: string;
         sae: string;
         ressources: string;
         partageCours: string;
-        
-        // Support
         support: string;
-        
-        // Modération
         panelControle: string;
         logsBots: string;
         logsModeration: string;
@@ -131,48 +99,24 @@ export interface SetupData {
         panelControle: string;
     };
 }
-
-/**
- * Options pour la progression du setup
- */
 export interface SetupProgress {
     currentStep: number;
     totalSteps: number;
     stepName: string;
     status: 'pending' | 'in-progress' | 'completed' | 'error';
 }
-
-/**
- * Résultat d'une étape du setup
- */
 export interface SetupStepResult {
     success: boolean;
     message: string;
-    data?: any;
+    data?: unknown;
     error?: Error;
 }
-
-/**
- * Configuration des liens utiles pour le menu déroulant
- */
 export interface UsefulLink {
     label: string;
     description: string;
     url: string;
     emoji?: string;
 }
-
-/**
- * Type pour les clés de rôles
- */
 export type RoleKey = keyof SetupData['roles'];
-
-/**
- * Type pour les clés de catégories
- */
 export type CategoryKey = keyof SetupData['categories'];
-
-/**
- * Type pour les clés de salons
- */
 export type ChannelKey = keyof SetupData['channels'];

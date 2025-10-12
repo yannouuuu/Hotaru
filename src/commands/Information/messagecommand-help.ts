@@ -13,6 +13,7 @@ export default new MessageCommand({
         cooldown: 10000
     },
     run: async (client: DiscordBot, message: Message, args: string[]) => {
+        void args;
         if (!message.guild) return;
 
         const prefix = client.database.ensure('prefix-' + message.guild.id, config.commands.prefix);

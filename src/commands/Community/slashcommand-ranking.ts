@@ -9,7 +9,7 @@ import {
     TimestampStyles
 } from 'discord.js';
 import type { DiscordBot } from '../../client/DiscordBot.js';
-import type { ProfessorProfile } from '../../utils/ProfessorRankingManager.js';
+import type { ProfessorProfile } from '../../types/professor-ranking.js';
 
 const formatMonth = (input?: string): string | null => {
     if (!input) {

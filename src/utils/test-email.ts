@@ -29,7 +29,7 @@ try {
     process.exit(1);
 }
 
-const TEST_EMAIL = process.env.SMTP_USER; // Envoie à vous-même pour le test
+const TEST_EMAIL = process.env.SMTP_USER;
 
 console.log('╔════════════════════════════════════════╗');
 console.log('║   🧪 Test de configuration SMTP       ║');
@@ -72,7 +72,7 @@ const transporter = nodemailer.createTransport({
 // Test de la connexion
 console.log('🔌 Test de connexion SMTP...\n');
 
-transporter.verify((error, success) => {
+transporter.verify((error) => {
     if (error) {
         console.error('❌ Échec de la connexion SMTP:\n');
         console.error(`   Erreur: ${error.message}\n`);

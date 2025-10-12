@@ -59,7 +59,7 @@ export default new ApplicationCommand({
         }
 
         try {
-            const { totals, weekKey } = client.professorRankingManager.submitVote(
+            const { weekKey } = client.professorRankingManager.submitVote(
                 interaction.guildId,
                 interaction.user.id,
                 picks

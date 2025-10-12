@@ -68,7 +68,7 @@ export class CommandsListener {
 
             try {
                 if (command.options) {
-                    const commandContinue = await handleApplicationCommandOptions(interaction, command.options, command.command);
+                    const commandContinue = await handleApplicationCommandOptions(interaction, command.options);
 
                     if (!commandContinue) return;
                 }

@@ -279,16 +279,16 @@ async function handleRemove(
         return;
     }
 
-    // Retirer les rôles (vérifié + étudiant)
+    const verificationData = result.data as { email: string };
+
     const rolesRemoved = await removeVerificationRoles(interaction.guild, user.id, client.database);
 
-    // Message de confirmation
     const embed = new EmbedBuilder()
         .setColor(Colors.Orange)
         .setTitle('🗑️ Vérification retirée')
         .setDescription(`La vérification de <@${user.id}> a été retirée avec succès.`)
         .addFields(
-            { name: '📧 Email', value: result.data.email, inline: true },
+            { name: '📧 Email', value: verificationData.email, inline: true },
             { name: '📝 Raison', value: reason, inline: true },
             { name: '👤 Par', value: `<@${interaction.user.id}>`, inline: true },
             { name: '🎭 Rôles retirés', value: rolesRemoved || 'Aucun', inline: false }
@@ -297,7 +297,6 @@ async function handleRemove(
 
     await interaction.editReply({ embeds: [embed] });
 
-    // Log dans le canal des logs
     await sendLogMessage(
         interaction.guild,
         verificationConfig.logChannelId,
@@ -305,7 +304,7 @@ async function handleRemove(
             'removed',
             user.id,
             user.username,
-            result.data.email,
+            verificationData.email,
             interaction.user.username
         )
     );

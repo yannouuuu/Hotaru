@@ -14,74 +14,16 @@ import {
     type NewsChannel
 } from 'discord.js';
 import type { DiscordBot } from '../client/DiscordBot.js';
-
-export type VoteWeight = 3 | 2 | 1;
-
-export interface ProfessorProfile {
-    id: string;
-    name: string;
-    bio?: string;
-    quote?: string;
-    emoji?: string;
-    addedBy: Snowflake;
-    addedAt: number;
-    active: boolean;
-    stats: {
-        totalPoints: number;
-        monthly: Record<string, number>;
-        annual: Record<string, number>;
-        weeklyBest?: string;
-    };
-}
-
-export interface VoteRecord {
-    picks: string[];
-    weights: VoteWeight[];
-    timestamp: number;
-}
-
-export interface WeeklyTotals {
-    weekKey: string;
-    totals: Record<string, number>;
-    votes: Record<Snowflake, VoteRecord>;
-    voters: Record<Snowflake, number>;
-    lastArchiveAt?: number;
-}
-
-export interface WeeklyArchiveEntry {
-    weekKey: string;
-    totals: Record<string, number>;
-    rankings: Array<{ professorId: string; points: number; rank: number }>; 
-    archivedAt: number;
-}
-
-export interface ProfessorRankingData {
-    professors: Record<string, ProfessorProfile>;
-    archiveChannelId?: Snowflake;
-    panel?: {
-        channelId: Snowflake;
-        messageId: Snowflake;
-    };
-    weekly: WeeklyTotals;
-    history: {
-        weekly: Record<string, WeeklyArchiveEntry>;
-    };
-    voterStats: Record<Snowflake, {
-        totalVotes: number;
-        lastVoteAt: number;
-    }>;
-    lastSeenWeek?: string;
-    lastSeenMonth?: string;
-    lastSeenYear?: string;
-}
+import type {
+    VoteWeight,
+    ProfessorProfile,
+    WeeklyTotals,
+    WeeklyArchiveEntry,
+    ProfessorRankingData,
+    ArchiveResult
+} from '../types/professor-ranking.js';
 
 type ResetScope = 'week' | 'month' | 'year' | 'all';
-
-type ArchiveResult = {
-    weekKey: string;
-    leaderboard: WeeklyArchiveEntry['rankings'];
-    totals: Record<string, number>;
-};
 
 const WEIGHT_MAP: VoteWeight[] = [3, 2, 1];
 const BADGE_EMOJIS = ['🥇', '🥈', '🥉'];
@@ -93,9 +35,6 @@ const PANEL_BUTTON_IDS = {
     history: 'prof-panel_history',
     voters: 'prof-panel_voters'
 } as const;
-const PANEL_VOTE_SELECT_ID = 'prof-panel_vote-select';
-const PANEL_HISTORY_SELECT_ID = 'prof-panel_history-select';
-const PANEL_MAX_OPTIONS = 25;
 
 function slugify(name: string): string {
     return name
@@ -519,7 +458,7 @@ export class ProfessorRankingManager {
         uniquePicks.forEach((id) => {
             const professor = data.professors[id];
             if (!professor || !professor.active) {
-                throw new Error(`Le professeur sélectionné (${id}) n\'existe pas ou n'est plus actif.`);
+                throw new Error(`Le professeur sélectionné (${id}) n'existe pas ou n'est plus actif.`);
             }
         });
 

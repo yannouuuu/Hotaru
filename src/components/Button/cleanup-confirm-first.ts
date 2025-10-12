@@ -1,5 +1,4 @@
 import {
-    ButtonInteraction,
     EmbedBuilder,
     ActionRowBuilder,
     ButtonBuilder,
@@ -8,7 +7,6 @@ import {
 } from 'discord.js';
 import { Component } from '../../structure/Component.js';
 import type { DiscordBot } from '../../client/DiscordBot.js';
-import { SetupManager } from '../../utils/SetupManager.js';
 
 export default new Component({
     customId: 'cleanup_confirm_first',
