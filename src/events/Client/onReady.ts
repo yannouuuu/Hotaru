@@ -17,5 +17,13 @@ export default new Event({
         if (__client__.reminderService) {
             __client__.reminderService.start();
         }
+
+        if (__client__.scheduleManager) {
+            __client__.scheduleManager.start();
+        }
+
+        if (__client__.professorRankingManager) {
+            __client__.professorRankingManager.start();
+        }
     }
 }).toJSON();

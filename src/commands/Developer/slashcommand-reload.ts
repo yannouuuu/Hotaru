@@ -21,6 +21,7 @@ export default new ApplicationCommand({
         try {
             await client.commands_handler.reload();
             await client.commands_handler.registerApplicationCommands(config.development);
+            client.scheduleManager.reload();
 
             await interaction.editReply({
                 content: 'Successfully reloaded application commands and message commands.'

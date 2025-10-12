@@ -20,6 +20,7 @@ export default new MessageCommand({
         try {
             await client.commands_handler.reload();
             await client.commands_handler.registerApplicationCommands(config.development);
+            client.scheduleManager.reload();
 
             await replyMessage.edit({
                 content: 'Successfully reloaded application commands and message commands.'

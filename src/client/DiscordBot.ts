@@ -14,6 +14,8 @@ import type { ComponentData } from '../structure/Component.js';
 import type { AutocompleteComponentData } from '../structure/AutocompleteComponent.js';
 import { JobsManager } from '../utils/JobsManager.js';
 import { ReminderService } from '../utils/reminders/ReminderService.js';
+import { ScheduleManager } from '../utils/ScheduleManager.js';
+import { ProfessorRankingManager } from '../utils/ProfessorRankingManager.js';
 
 export class DiscordBot extends Client {
     public collection = {
@@ -43,6 +45,8 @@ export class DiscordBot extends Client {
     public database: QuickYAML;
     public jobsManager: JobsManager;
     public reminderService: ReminderService;
+    public scheduleManager: ScheduleManager;
+    public professorRankingManager: ProfessorRankingManager;
 
     constructor() {
         super({
@@ -69,6 +73,8 @@ export class DiscordBot extends Client {
     this.database = new QuickYAML(config.database.path);
     this.jobsManager = new JobsManager(this);
     this.reminderService = new ReminderService(this);
+    this.scheduleManager = new ScheduleManager(this);
+    this.professorRankingManager = new ProfessorRankingManager(this);
 
         new CommandsListener(this);
         new ComponentsListener(this);
@@ -77,6 +83,9 @@ export class DiscordBot extends Client {
     public startStatusRotation = (): void => {
         let index = 0;
         setInterval(() => {
+            if (this.scheduleManager?.hasPresenceMode()) {
+                return;
+            }
             if (this.user) {
                 this.user.setPresence({ activities: [this.statusMessages[index]] });
                 index = (index + 1) % this.statusMessages.length;

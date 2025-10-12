@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.3.0] - 2025-10-12
+
+### 🏆 Nouveauté - Classement des professeurs
+
+Système complet de votes hebdomadaires avec classements mensuels/annuels et archivage automatique.
+
+### Added
+- 🎓 **Nouvelles commandes Communauté :**
+  - `/prof-vote` pour voter (points pondérés 3/2/1)
+  - `/ranking` (weekly/monthly/annual/history/voters)
+- 🛠️ **Commandes Admin `/prof` :** ajout, retrait, reset, configuration du salon d'archives, listing
+- � **Panneau interactif** : embed permanent avec boutons (vote, classements mensuels/annuels, historique, top votants)
+- �📦 **ProfessorRankingManager** : persistance YAML, historiques hebdomadaires, classement votants
+- 📄 Documentation dédiée : `docs/PROFESSOR_RANKING.md`
+
+### Changed
+- ⚙️ Initialisation du `ProfessorRankingManager` dans le cycle de vie du bot (démarrage automatique)
+- 🔔 Archivage hebdomadaire automatique avec publication optionnelle dans un salon configuré
+
+---
+
 ## [2.2.0] - 2025-10-11
 
 ### ⏰ Nouveauté - Gestionnaire de rappels personnels

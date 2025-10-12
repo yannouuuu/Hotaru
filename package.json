@@ -23,6 +23,7 @@
   "license": "MIT",
   "dependencies": {
     "discord.js": "^14.17.0",
+    "node-ical": "^0.21.0",
     "quick-yaml.db": "^1.2.2"
   },
   "devDependencies": {
