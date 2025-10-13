@@ -45,7 +45,7 @@ export const config: Config = {
         path: './database.yml'
     },
     development: {
-        enabled: true,
+        enabled: false,  // ← Désactiver le mode dev pour déploiement global
         guildId: process.env.DEV_GUILD_ID || '1425233434766475327'
     },
     commands: {
