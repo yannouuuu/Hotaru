@@ -70,6 +70,90 @@ export class VerificationManager {
     }
 
     /**
+     * Générer un pseudo à partir d'un email universitaire
+     */
+    private deriveNicknameFromEmail(email: string): string | null {
+        const [localPart] = email.split('@');
+        if (!localPart) return null;
+
+        const segments = localPart
+            .split(/[._\s]+/)
+            .map(segment => segment.toLowerCase())
+            .filter(Boolean);
+
+        if (segments.length === 0) return null;
+
+        const sanitize = (value: string): string => {
+            const withoutDigits = value.replace(/\d+$/g, '');
+            return withoutDigits.replace(/[^a-zA-Z\-']/g, '');
+        };
+
+        const formatCompound = (value: string, delimiter: string): string => {
+            return value
+                .split(delimiter)
+                .filter(Boolean)
+                .map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+                .join(delimiter);
+        };
+
+        const format = (value: string): string => {
+            let formatted = value.toLowerCase();
+            formatted = formatCompound(formatted, '-');
+            formatted = formatCompound(formatted, "'");
+            if (!formatted) return formatted;
+            return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+        };
+
+        const firstSegment = sanitize(segments[0]);
+        if (!firstSegment) return null;
+
+        const ignored = [/^etu\d*$/i, /^etudiant$/i, /^student$/i];
+        const lastSegments: string[] = [];
+
+        for (let i = 1; i < segments.length; i++) {
+            const raw = segments[i];
+            if (ignored.some(pattern => pattern.test(raw))) {
+                continue;
+            }
+            const cleaned = sanitize(raw);
+            if (cleaned) {
+                lastSegments.push(cleaned);
+            }
+        }
+
+        if (lastSegments.length === 0 && segments.length > 1) {
+            const fallback = sanitize(segments[1]);
+            if (fallback) {
+                lastSegments.push(fallback);
+            }
+        }
+
+        const firstName = format(firstSegment);
+        const lastName = lastSegments.map(format).join(' ').trim();
+        const nickname = lastName ? `${firstName} ${lastName}` : firstName;
+
+        return nickname.trim() || null;
+    }
+
+    /**
+     * Appliquer automatiquement le pseudo vérifié
+     */
+    private async applyVerifiedNickname(member: GuildMember, email: string): Promise<void> {
+        if (!member.manageable) return;
+        const nickname = this.deriveNicknameFromEmail(email);
+        if (!nickname) return;
+
+        const current = member.nickname ?? member.user.username;
+        if (current === nickname) return;
+
+        try {
+            await member.setNickname(nickname, 'Rename automatique après vérification');
+        } catch (error) {
+            console.error('Erreur lors de la mise à jour du pseudo vérifié:', error);
+        }
+    }
+
+    /**
      * Vérifier si l'utilisateur est déjà vérifié
      */
     public isUserVerified(userId: string, guildId: string): boolean {
@@ -376,6 +460,8 @@ export class VerificationManager {
         this.logAttempt(userId, codeData.email, guildId, true, 'validation');
         this.addLog(guildId, userId, member.user.username, codeData.email, 'validated');
 
+        await this.applyVerifiedNickname(member, codeData.email);
+
         // Email de bienvenue (optionnel)
         await emailService.sendWelcomeEmail(codeData.email, member.user.username, member.guild.name);
 
@@ -512,6 +598,8 @@ export class VerificationManager {
         }
 
         this.addLog(guildId, userId, member.user.username, email, 'manual', `Vérifié manuellement par ${adminName}`, adminId);
+
+        await this.applyVerifiedNickname(member, email);
 
         return {
             success: true,
