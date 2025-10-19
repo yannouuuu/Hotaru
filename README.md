@@ -5,7 +5,6 @@ Hotaru is a production-grade Discord assistant tailored for university communiti
 ## Table of Contents
 - [Overview](#overview)
 - [Key Highlights](#key-highlights)
-- [Quick Deploy](#quick-deploy)
 - [Architecture](#architecture)
 - [Core Systems](#core-systems)
 - [Getting Started](#getting-started)
@@ -25,21 +24,6 @@ Hotaru centralises everything needed to run a student Discord server: automated 
 - Productivity stack with collaborative agenda, reminders, Hyperplanning synchronisation, and jobs feed automation.
 - Clean architecture: commands/components/events are auto-registered via dedicated handlers with shared structure classes.
 - Fully typed TypeScript, Bun-native tooling, and lint/typecheck tasks to keep the codebase reliable.
-
-## Quick Deploy
-
-### Deploy to Heroku in 2 minutes
-
-```bash
-heroku create your-bot-name
-heroku buildpacks:set https://github.com/xHyroM/heroku-buildpack-bun.git
-heroku config:set CLIENT_TOKEN=your_discord_bot_token
-heroku config:set OWNER_ID=your_discord_user_id
-git push heroku main
-heroku ps:scale worker=1
-```
-
-See [CONTRIBUTING.md](CONTRIBUTING.md#-deployment) for detailed deployment instructions including environment variables, SMTP setup, and troubleshooting.
 
 ## Architecture
 Hotaru follows a modular handler system that discovers features at runtime:
@@ -84,7 +68,7 @@ Hotaru follows a modular handler system that discovers features at runtime:
 
 ### Additional Integrations
 - `AgendaManager`, `SetupMessages`, and `VerificationMessages` generate user-facing embeds and follow-up flows.
-- Quartz-based cron emulation via Bun’s scheduler keeps reminders, jobs, and schedules synchronised.
+- Quartz-based cron emulation via Bun's scheduler keeps reminders, jobs, and schedules synchronised.
 
 ## Getting Started
 
@@ -94,7 +78,7 @@ Hotaru follows a modular handler system that discovers features at runtime:
     - SMTP account for university email verification
 2. **Clone the repository**
     ```bash
-    git clone https://github.com/your-org/Hotaru.git
+    git clone https://github.com/yannouuuu/Hotaru.git
     cd Hotaru
     ```
 3. **Install dependencies**
@@ -149,455 +133,153 @@ When altering commands or components, rely on the handler auto-loader—export a
 Default message prefix: `!` (override with `BOT_PREFIX` or `!setprefix`). Slash commands are registered globally unless development mode targets a test guild.
 
 <details>
-<summary>Catalogue complet des commandes</summary>
+<summary>Complete command catalog</summary>
 
 #### Admin
 
-| Commande | Type | Description | Restrictions principales |
+| Command | Type | Description | Main Restrictions |
 | --- | --- | --- | --- |
-| `/setup` | Slash | Configure automatiquement un serveur BUT Informatique (rôles, salons, panneaux). | Réservé aux administrateurs, cooldown 60 s. |
-| `/cleanup` | Slash | Supprime toute la configuration générée (rôles, salons, base de données). | Réservé aux administrateurs, action irréversible, cooldown 30 s. |
-| `/prof` | Slash | Gère le classement des professeurs (ajout, archivage, reset, panneau, etc.). | Permissions administrateur, sous-commandes multiples. |
+| `/setup` | Slash | Automatically configures a Computer Science BUT server (roles, channels, panels). | Admin only, 60s cooldown. |
+| `/cleanup` | Slash | Removes all generated configuration (roles, channels, database). | Admin only, irreversible action, 30s cooldown. |
+| `/prof` | Slash | Manages professor rankings (add, archive, reset, panel, etc.). | Admin permissions, multiple subcommands. |
 
 #### Community
 
-| Commande | Type | Description | Restrictions principales |
+| Command | Type | Description | Main Restrictions |
 | --- | --- | --- | --- |
-| `/prof-vote` | Slash | Vote hebdomadaire pour les professeurs préférés avec pondération. | Disponible en guilde, cooldown 5 s. |
-| `/ranking` | Slash | Affiche les classements (hebdomadaire, mensuel, annuel, archives). | Disponible en guilde uniquement. |
+| `/prof-vote` | Slash | Weekly vote for favorite professors with weighting. | Available in guild, 5s cooldown. |
+| `/ranking` | Slash | Displays rankings (weekly, monthly, yearly, archives). | Guild only. |
 
 #### Developer
 
-| Commande | Type | Description | Restrictions principales |
+| Command | Type | Description | Main Restrictions |
 | --- | --- | --- | --- |
-| `/eval` | Slash | Exécute du JavaScript arbitraire et renvoie le résultat. | Réservé au propriétaire du bot. |
-| `/reload` | Slash | Recharge commandes, composants et plannings. | Réservé aux développeurs déclarés. |
-| `!eval` | Message | Évalue une expression JavaScript et retourne la sortie en fichier. | Réservé au propriétaire du bot. |
-| `!reload` | Message | Recharge commandes et agendas depuis le chat. | Réservé aux développeurs déclarés. |
+| `/eval` | Slash | Executes arbitrary JavaScript and returns the result. | Bot owner only. |
+| `/reload` | Slash | Reloads commands, components and schedules. | Declared developers only. |
+| `!eval` | Message | Evaluates a JavaScript expression and returns output in file. | Bot owner only. |
+| `!reload` | Message | Reloads commands and agendas from chat. | Declared developers only. |
 
 #### Information
 
-| Commande | Type | Description | Restrictions principales |
+| Command | Type | Description | Main Restrictions |
 | --- | --- | --- | --- |
-| `/help` | Slash | Liste les commandes applicatives accessibles. | Réponse éphémère, cooldown 10 s. |
-| `!help` | Message | Liste les commandes message disponibles avec le préfixe actuel. | Cooldown 10 s. |
+| `/help` | Slash | Lists accessible application commands. | Ephemeral response, 10s cooldown. |
+| `!help` | Message | Lists available message commands with current prefix. | 10s cooldown. |
 
 #### Productivity
 
-| Commande | Type | Description | Restrictions principales |
+| Command | Type | Description | Main Restrictions |
 | --- | --- | --- | --- |
-| `/agenda` | Slash | Gère l'agenda collaboratif (ajout, suppression, statut, export ICS). | Rôles configurables, multiprojets. |
-| `/ai-chat` | Slash | Discussion rapide avec l'assistant IA Hotaru. | Option de réponse privée, cooldown 8 s. |
-| `/ai-explain` | Slash | Explication pédagogique d'un code source. | Option contexte + réponse privée, cooldown 15 s. |
-| `/ai-gen` | Slash | Génération de code selon un besoin fonctionnel. | Supporte choix de langage, cooldown 20 s. |
-| `/ai-review` | Slash | Relecture de code par IA avec recommandations. | Option objectif, cooldown 20 s. |
-| `/summarize` | Slash | Résumé structuré d'un texte ou d'un article. | Plusieurs styles disponibles, cooldown 18 s. |
-| `/translate` | Slash | Traduction technique multi-langue conservant la mise en forme. | Choix de langue cible, cooldown 12 s. |
-| `/edt` | Slash | Synchronise un emploi du temps Hyperplanning (ICS). | Réservé aux administrateurs, options de mode et cible. |
+| `/agenda` | Slash | Manages collaborative agenda (add, delete, status, ICS export). | Configurable roles, multi-projects. |
+| `/ai-chat` | Slash | Quick chat with Hotaru AI assistant. | Private response option, 8s cooldown. |
+| `/ai-explain` | Slash | Educational explanation of source code. | Context option + private response, 15s cooldown. |
+| `/ai-gen` | Slash | Code generation based on functional need. | Language choice support, 20s cooldown. |
+| `/ai-review` | Slash | AI code review with recommendations. | Objective option, 20s cooldown. |
+| `/summarize` | Slash | Structured summary of text or article. | Multiple styles available, 18s cooldown. |
+| `/translate` | Slash | Technical multi-language translation preserving formatting. | Target language choice, 12s cooldown. |
+| `/edt` | Slash | Synchronizes Hyperplanning schedule (ICS). | Admin only, mode and target options. |
 
 #### Support
 
-| Commande | Type | Description | Restrictions principales |
+| Command | Type | Description | Main Restrictions |
 | --- | --- | --- | --- |
-| `/close-ticket` | Slash | Ferme un ticket de support et journalise la clôture. | Nécessite propriétaire du ticket ou rôle support/admin. |
+| `/close-ticket` | Slash | Closes a support ticket and logs the closure. | Ticket owner or support/admin role required. |
 
 #### Utility
 
-| Commande | Type | Description | Restrictions principales |
+| Command | Type | Description | Main Restrictions |
 | --- | --- | --- | --- |
-| `/jobs` | Slash | Rafraîchit ou affiche le statut des offres France Travail. | Permission `ManageGuild` requise. |
-| `/ping` | Slash | Diagnostic rapide de latence bot ↔ Discord. | Cooldown 5 s. |
-| `/remind` | Slash | Crée un rappel personnel (éventuellement récurrent). | Disponible en guilde, cooldown 5 s. |
-| `/reminders` | Slash | Liste et gère les rappels actifs/complets/annulés. | Réponses en messages privés éphémères. |
-| `!ping` | Message | Retourne le ping WebSocket du bot. | Cooldown 5 s. |
-| `!setprefix` | Message | Met à jour le préfixe spécifique à la guilde. | Accessible après configuration, longueur max 5 caractères. |
+| `/jobs` | Slash | Refreshes or displays France Travail offers status. | ManageGuild permission required. |
+| `/ping` | Slash | Quick diagnostic of bot ↔ Discord latency. | 5s cooldown. |
+| `/remind` | Slash | Creates a personal reminder (possibly recurring). | Available in guild, 5s cooldown. |
+| `/reminders` | Slash | Lists and manages active/complete/cancelled reminders. | Ephemeral private messages. |
+| `!ping` | Message | Returns the bot's WebSocket ping. | 5s cooldown. |
+| `!setprefix` | Message | Updates the guild-specific prefix. | Accessible after configuration, max 5 characters. |
 
 #### Verification
 
-| Commande | Type | Description | Restrictions principales |
+| Command | Type | Description | Main Restrictions |
 | --- | --- | --- | --- |
-| `/manage-verified` | Slash | Outils d'administration pour les utilisateurs vérifiés (stats, recherche, manuel). | Administrateurs uniquement, réponses éphémères. |
+| `/manage-verified` | Slash | Admin tools for verified users (stats, search, manual). | Admins only, ephemeral responses. |
 
 </details>
 
 ## Troubleshooting & Support
-- **Slash commands absent**: exécutez `/reload` dans la guilde de développement ou redémarrez le bot pour pousser les commandes globales.
-- **Emails non envoyés**: vérifiez les variables SMTP, ports TLS, et testez `bun run src/utils/test-email.ts` pour valider les identifiants.
-- **Rappels ou agenda inactifs**: assurez-vous que le processus reste en ligne (Bun scheduler en mémoire) ou basculez sur un orchestrateur (PM2, Docker).
-- **Jobs feed silencieux**: contrôlez `/jobs statut` pour vérifier les identifiants France Travail, le salon cible et la dernière erreur remontée.
-- **Permissions Discord**: les commandes administratives nécessitent les flags adéquats (Administrator, ManageGuild, ManageChannels selon les cas).
+- **Missing slash commands**: run `/reload` in the development guild or restart the bot to push global commands.
+- **Emails not sent**: check SMTP variables, TLS ports, and test `bun run src/utils/test-email.ts` to validate credentials.
+- **Inactive reminders or agenda**: ensure the process stays online (Bun scheduler in memory) or switch to an orchestrator (PM2, Docker).
+- **Silent jobs feed**: check `/jobs statut` to verify France Travail credentials, target channel and last reported error.
+- **Discord permissions**: administrative commands require appropriate flags (Administrator, ManageGuild, ManageChannels as applicable).
 
 ## Project Resources
-- `docs/TECHNICAL_REFERENCE.md` – Documentation approfondie de l'architecture et des flux métier.
-- `docs/SETUP_GUIDE.md` – Walkthrough complet du setup automatique et panneaux interactifs.
-- `VERIFICATION_GUIDE.md` – Procédure de configuration et de suivi de la vérification email.
-- `MANAGEMENT_COMMANDS_QUICKREF.md` – Aide-mémoire pour les commandes d'administration.
-- `AUTO_ROLES_IMPROVEMENT.md`, `TIMETABLE_SYNC.md`, `JOBS_FEED.md` – Notes de conception pour les évolutions majeures.
-- `docs/CHANGELOG.md` – Historique des mises à jour et migrations.
+- `docs/TECHNICAL_REFERENCE.md` – In-depth documentation of architecture and business flows.
+- `docs/SETUP_GUIDE.md` – Complete walkthrough of automatic setup and interactive panels.
+- `VERIFICATION_GUIDE.md` – Email verification configuration and monitoring procedure.
+- `MANAGEMENT_COMMANDS_QUICKREF.md` – Quick reference for administration commands.
+- `AUTO_ROLES_IMPROVEMENT.md`, `TIMETABLE_SYNC.md`, `JOBS_FEED.md` – Design notes for major evolutions.
+- `docs/CHANGELOG.md` – Update history and migrations.
 
-Pour contribuer, merci de consulter `docs/CONTRIBUTING.md` avant d'ouvrir une pull request.
+For contributions, please consult `docs/CONTRIBUTING.md` before opening a pull request.
 
-- 📘 **Fully Typed** - Complete TypeScript implementation with strict type checking- Updated to the latest version of [discord.js v14.x](https://github.com/discordjs/discord.js/releases).
+## 📋 Requirements
 
-- 🎯 **Multiple Command Types** - Support for slash commands, message commands, context menus- Supports all possible type of commands.
+- [Bun](https://bun.sh) v1.0.0 or higher
+- Node.js v18.0.0 or higher (for Discord.js compatibility)
+- Discord Bot Token ([Create one here](https://discord.com/developers/applications))
 
-- 🧩 **Component Handling** - Built-in handlers for buttons, select menus, modals, and autocomplete    - Message commands.
-
-- 🔄 **Hot Reload** - Developer commands for reloading commands on the fly    - Application commands:
-
-- 💾 **Database Support** - Integrated YAML database for persistent storage        - Chat Input
-
-- ⚡ **Event System** - Flexible event handling system        - User context
-
-- 🛡️ **Permission System** - Role-based command restrictions (bot owner, developers, guild owner)        - Message context
-
-- ⏱️ **Cooldown Management** - Built-in cooldown system for commands- Handles components.
-
-- 📝 **Clean Architecture** - Well-organized, maintainable codebase    - Buttons
-
-    - Select menus
-
-## 📋 Requirements    - Modals
-
-    - Autocomplete
-
-- [Bun](https://bun.sh) v1.0.0 or higher- Easy and simple to use.
-
-- Node.js v18.0.0 or higher (for Discord.js compatibility)- Advanced command options.
-
-- Discord Bot Token ([Create one here](https://discord.com/developers/applications))- Simple Database included (YAML).
-
-
-
-## 🚀 Quick Start## Commands, Components, and Events structure:
-
-### Message commands:
+## 🚀 Quick Start
 
 ### 1. Clone the repository
 
-[`Partial`](https://www.typescriptlang.org/docs/handbook/utility-types.html#partialtype).<br>
+```bash
+git clone https://github.com/yannouuuu/Hotaru.git
+cd Hotaru
+```
 
-```bash`Awaitable` means the function might be **async**.
+### 2. Install dependencies
 
-git clone <your-repository-url>
+```bash
+bun install
+```
 
-cd HotaruReborn```ts
+### 3. Configure environment variables
 
-```new MessageCommand({
+Copy the example environment file and fill in your bot token:
 
-    command: {
+```bash
+cp .env.example .env
+```
 
-### 2. Install dependencies        name: string, // The command name
+Edit `.env` and add your configuration:
 
-        description?: string, // The command description (optional)
-
-```bash        aliases?: string[], // The command aliases (optional)
-
-bun install        permissions?: PermissionResolvable[], // The command permissions (optional)
-
-```    },
-
-    options?: Partial<{
-
-### 3. Configure environment variables        cooldown: number, // The command cooldown, in milliseconds
-
-        botOwner: boolean, // Bot owner can only run it? (true = yes, false = no)
-
-Copy the example environment file and fill in your bot token:        guildOwner: boolean, // Guild owner can only run it? (true = yes, false = no)
-
-        botDevelopers: boolean, // Bot developers can only run it? (true = yes, false = no)
-
-```bash        nsfw: boolean // The command contains NSFW content? (true = yes, false = no)
-
-cp .env.example .env    }>,
-
-```    run: Awaitable<(client: DiscordBot, message: Message, args: string[]) => void> // The main function to execute the command
-
-});
-
-Edit `.env` and add your configuration:```
-
-
-
-```env### Application commands (Chat input, User context, Message context):
-
+```env
 CLIENT_TOKEN=your_discord_bot_token_here
-
-OWNER_ID=your_discord_user_id[`APIApplicationCommand`](https://discord.com/developers/docs/interactions/application-commands#application-command-object-application-command-structure), [`Partial`](https://www.typescriptlang.org/docs/handbook/utility-types.html#partialtype).<br>
-
-DEVELOPER_IDS=your_id,another_id`Awaitable` means the function might be **async**.
-
+OWNER_ID=your_discord_user_id
+DEVELOPER_IDS=your_id,another_id
 BOT_PREFIX=!
+DEV_GUILD_ID=your_test_guild_id
+```
 
-DEV_GUILD_ID=your_test_guild_id```ts
+### 4. Configure the bot
 
-```new ApplicationCommand({
+Edit `src/config.ts` to customize:
+- Command prefix
+- Development mode settings
+- User permissions
+- Custom messages
 
-    command: APIApplicationCommand,
+### 5. Run the bot
 
-### 4. Configure the bot    options?: Partial<{
+Development mode (with auto-reload):
 
-        cooldown: number, // The command cooldown, in milliseconds
-
-Edit `src/config.ts` to customize:        botOwner: boolean, // Bot owner can only run it? (true = yes, false = no)
-
-- Command prefix        guildOwner: boolean, // Guild owner can only run it? (true = yes, false = no)
-
-- Development mode settings        botDevelopers: boolean, // Bot developers can only run it? (true = yes, false = no)
-
-- User permissions    }>,
-
-- Custom messages    run: Awaitable<(client: DiscordBot, interaction: Interaction) => void> // The main function to execute the command
-
-});
-
-### 5. Run the bot```
-
-
-
-Development mode (with auto-reload):### Components:
-
-```bash#### Autocomplete:
-
+```bash
 bun run dev
-
-````Awaitable` means the function might be **async**.
-
-
-
-Production mode:```ts
-
-```bashnew AutocompleteComponent({
-
-bun start    commandName: string,
-
-```    run: Awaitable<(client: DiscordBot, interaction: AutocompleteInteraction) => void> // The main function to execute the command
-
-});
-
-## 📁 Project Structure```
-
-
-
-```#### Buttons, Select Menus, and Modals:
-
-HotaruReborn/
-
-├── src/[`Partial`](https://www.typescriptlang.org/docs/handbook/utility-types.html#partialtype).<br>
-
-│   ├── client/              # Discord client and core functionality`Awaitable` means the function might be **async**.
-
-│   │   ├── DiscordBot.ts    # Main bot client
-
-│   │   └── handler/         # Command, component, and event handlers```ts
-
-│   ├── commands/            # Bot commandsnew Component({
-
-│   │   ├── Developer/       # Owner/developer-only commands    customId: string,
-
-│   │   ├── Information/     # Info commands (help, etc.)    type: 'modal' | 'select' | 'button',
-
-│   │   ├── Utility/         # Utility commands (ping, setprefix)    options?: Partial<{
-
-│   │   └── Other/           # Testing and example commands        public: boolean // Other users can use the main interaction author button/select? (true = yes, false = no)
-
-│   ├── components/          # Interactive components    }>
-
-│   │   ├── Button/          # Button handlers    run: Awaitable<(client: DiscordBot, interaction: Interaction) => void> // The main function to execute the command
-
-│   │   ├── Modal/           # Modal handlers});
-
-│   │   ├── SelectMenu/      # Select menu handlers```
-
-│   │   └── autocomplete/    # Autocomplete handlers
-
-│   ├── events/              # Discord event listeners### Events:
-
-│   │   └── Client/          # Client events (ready, etc.)
-
-│   ├── structure/           # Base classes and types`Awaitable` means the function might be **async**.<br>
-
-│   ├── utils/               # Utility functions`K` is a type parameter, extends `keyof ClientEvents`.
-
-│   ├── config.ts            # Bot configuration
-
-│   └── index.ts             # Entry point```ts
-
-├── .env                     # Environment variables (not in git)new Event({
-
-├── .env.example             # Example environment file    event: K,
-
-├── tsconfig.json            # TypeScript configuration    once?: boolean, // The event can only happen once? (true = yes, false = no)
-
-├── package.json             # Dependencies and scripts    run: Awaitable<(client: DiscordBot, ...args: ClientEvents[K]) => void>
-
-└── README.md                # This file});
-
-``````
-
-
-
-## 🎯 Creating Commands## Dependencies
-
-- **colors** → latest
-
-### Slash Command Example- **discord.js** → 14.13.0 or newer
-
-- **dotenv** → latest
-
-```typescript- **quick-yaml.db** → latest
-
-import { ApplicationCommandType } from 'discord.js';
-
-import type { DiscordBot } from '../../client/DiscordBot.js';> [!NOTE]
-
-import { ApplicationCommand } from '../../structure/ApplicationCommand.js';> **Node.js v16.11.0** or newer is required to run **discord.js**.
-
-
-
-export default new ApplicationCommand({## Setup
-
-    command: {1. Install a code editor ([Visual Studio Code](https://code.visualstudio.com/Download) for an example).
-
-        name: 'example',2. Download this project as a **.zip** file: [Download](https://github.com/TFAGaming/DiscordJS-V14-Bot-Template/archive/refs/heads/main.zip)
-
-        description: 'An example command',3. Extract the **.zip** file into a normal folder.
-
-        type: ApplicationCommandType.ChatInput,4. Open your code editor, click on **Open Folder**, and select the new created folder.
-
-        options: []5. Rename the following files:
-
-    },
-
-    options: {- `src/example.config.js` → `src/config.js`: Used for handler configuration.
-
-        cooldown: 5000, // 5 seconds cooldown- `.env.example` → `.env`: Used for secrets, like the Discord bot token.
-
-        botDevelopers: false- `example.database.yml` → `database.yml`: Used as a main file for the database.
-
-    },- `example.terminal.log` → `terminal.log`: Used as a clone of terminal (to save previous terminal messages).
-
-    run: async (client: DiscordBot, interaction) => {
-
-        if (!interaction.isChatInputCommand()) return;6. Fill all the required values in **config.js** and **.env**.
-
-        
-
-        await interaction.reply({> [!CAUTION]
-
-            content: 'Hello from slash command!',> Please remember not to share your Discord bot token! This will give access to attackers to do anything they want with your bot, so please keep the token in a safe place, which is the **.env** file.
-
-            ephemeral: true
-
-        });7. Initialize a new project: `npm init` (To skip every step, do `npm init -y`).
-
-    }8. Install all [required dependencies](#dependencies): `npm install colors discord.js dotenv quick-yaml.db`
-
-}).toJSON();
-
-```9. Run the command `node .` or `npm run start` to start the bot.
-
-10. Enjoy! The bot should be online.
-
-### Message Command Example
-
-## Contributing
-
-```typescriptFeel free to fork the repository and submit a new pull request if you wish to contribute to this project.
-
-import type { Message } from 'discord.js';
-
-import type { DiscordBot } from '../../client/DiscordBot.js';Before you submit a pull request, ensure you tested it and have no issues. Also, keep the same coding style, which means don't use many unnecessary spaces or tabs.
-
-import { MessageCommand } from '../../structure/MessageCommand.js';
-
-Thank you to all the people who contributed to **DiscordJS-V14-Bot-Template**!
-
-export default new MessageCommand({
-
-    command: {<img src="https://contrib.rocks/image?repo=TFAGaming/DiscordJS-V14-Bot-Template">
-
-        name: 'example',
-
-        description: 'An example message command',## Support
-
-        aliases: ['ex']Join our Discord server if you have any questions to ask, or if you have a problem with this project, you can go to the [issues section](https://github.com/TFAGaming/DiscordJS-V14-Bot-Template/issues) and submit a new issue.
-
-    },
-
-    options: {<a href="https://discord.gg/E6VFACWu5V">
-
-        cooldown: 5000,  <img src="https://discord.com/api/guilds/918611797194465280/widget.png?style=banner3">
-
-        nsfw: false</a>
-
-    },
-
-    run: async (client: DiscordBot, message: Message, args: string[]) => {## License
-
-        await message.reply('Hello from message command!');[**GPL-3.0**](./LICENSE), General Public License v3
-    }
-}).toJSON();
 ```
 
-## 🧩 Creating Components
+Production mode:
 
-### Button Example
-
-```typescript
-import type { DiscordBot } from '../../client/DiscordBot.js';
-import { Component } from '../../structure/Component.js';
-
-export default new Component({
-    customId: 'my-button-id',
-    type: 'button',
-    run: async (client: DiscordBot, interaction) => {
-        if (!interaction.isButton()) return;
-
-        await interaction.reply({
-            content: 'Button clicked!',
-            ephemeral: true
-        });
-    }
-}).toJSON();
-```
-
-## 🎪 Creating Events
-
-```typescript
-import { Event } from '../../structure/Event.js';
-import { success } from '../../utils/Console.js';
-
-export default new Event({
-    event: 'ready',
-    once: true,
-    run: (__client__, client) => {
-        if (client.user) {
-            success(`Bot is ready as ${client.user.displayName}`);
-        }
-    }
-}).toJSON();
-```
-
-## ⚙️ Configuration Options
-
-### Command Options
-
-- `cooldown`: Cooldown time in milliseconds
-- `botOwner`: Only bot owner can use (boolean)
-- `botDevelopers`: Only developers can use (boolean)
-- `guildOwner`: Only guild owner can use (boolean)
-- `nsfw`: Requires NSFW channel (boolean, message commands only)
-
-### Development Mode
-
-Set `development.enabled` to `true` in `config.ts` to register commands to a specific guild for faster testing:
-
-```typescript
-development: {
-    enabled: true,
-    guildId: 'your_test_guild_id'
-}
+```bash
+bun start
 ```
 
 ## 📦 Available Scripts
@@ -615,27 +297,6 @@ bun run build
 # Type-check without building
 bun run typecheck
 ```
-
-## 🔧 Commands List
-
-### Developer Commands
-- `/eval` - Execute JavaScript code (Owner only)
-- `/reload` - Reload all commands (Developers only)
-- `!eval` - Message command version
-- `!reload` - Message command version
-
-### Utility Commands
-- `/ping` - Check bot latency
-- `!ping` - Message command version
-- `!setprefix` - Change the bot prefix for the server
-
-### Information Commands
-- `/help` - List all slash commands
-- `!help` - List all message commands
-
-### Testing Commands
-- `User Information` - User context menu
-- `Message Information` - Message context menu
 
 ## 🤝 Contributing
 
