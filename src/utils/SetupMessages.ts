@@ -40,10 +40,9 @@ export class SetupMessages {
             .setTitle('🎭 Rôles')
             .setDescription(
                 '**Récupérez vos rôles en cliquant sur les boutons ci-dessous :**\n\n' +
-                `📋 **Délégué** - Représentant de la promotion\n` +
-                `💼 **Jobs** - Accédez au salon des offres de stage et d'emploi\n` +
+                ` **Jobs** - Accédez au salon des offres de stage et d'emploi\n` +
                 `🎪 **Animation** - Accédez au salon des animations et créations\n\n` +
-                '⚠️ Les rôles de modération sont attribués par les administrateurs.'
+                '⚠️ Les rôles de modération (Délégué, Admin, Support) sont attribués par les administrateurs.'
             )
             .setColor(Colors.Purple)
             .setFooter({ text: 'Hotaru - Gestion des rôles' })
@@ -51,11 +50,6 @@ export class SetupMessages {
 
         const row = new ActionRowBuilder<ButtonBuilder>()
             .addComponents(
-                new ButtonBuilder()
-                    .setCustomId('role_delegue')
-                    .setLabel('Délégué')
-                    .setEmoji('📋')
-                    .setStyle(ButtonStyle.Primary),
                 new ButtonBuilder()
                     .setCustomId('role_jobs')
                     .setLabel('Jobs')
