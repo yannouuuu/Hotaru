@@ -2,8 +2,9 @@ import { EmbedBuilder, PermissionFlagsBits } from 'discord.js';
 import { Event } from '../../structure/Event.js';
 import { SetupManager } from '../../utils/SetupManager.js';
 
-const READ_ONLY_KEYS = ['rankingProfs', 'sondages', 'roles', 'informations'] as const;
+const READ_ONLY_KEYS = ['rankingProfs', 'roles', 'informations'] as const;
 const LINK_ONLY_KEYS = ['liensUtiles'] as const;
+const POLL_ONLY_KEYS = ['sondages'] as const;
 const URL_PATTERN = /^(https?:\/\/|www\.)\S+$/i;
 
 export default new Event({
@@ -34,6 +35,14 @@ export default new Event({
             const channelId = channelsMap[key];
             if (channelId) {
                 linkOnlyIds.add(channelId);
+            }
+        }
+
+        const pollOnlyIds = new Set<string>();
+        for (const key of POLL_ONLY_KEYS) {
+            const channelId = channelsMap[key];
+            if (channelId) {
+                pollOnlyIds.add(channelId);
             }
         }
 
@@ -80,11 +89,22 @@ export default new Event({
             }
 
             try {
-                await message.author.send({
-                    content: `${notice}\nSalon: #${message.channel.name}`
+                const warningMessage = await message.channel.send({
+                    content: `${message.author} ${notice}`,
+                    reply: { messageReference: message.id }
                 });
+
+                setTimeout(() => {
+                    warningMessage.delete().catch(() => {});
+                }, 5000);
             } catch {
-                // DM impossible (paramètres de confidentialité)
+                try {
+                    await message.author.send({
+                        content: `${notice}\nSalon: #${message.channel.name}`
+                    });
+                } catch {
+                    // DM impossible (paramètres de confidentialité)
+                }
             }
         };
 
@@ -97,6 +117,21 @@ export default new Event({
             }
 
             await sendNotice('Ce salon est réservé aux annonces automatiques, ton message a été supprimé.');
+            return;
+        }
+
+        if (pollOnlyIds.has(message.channelId)) {
+            const hasPollComponents = message.components && message.components.length > 0;
+
+            if (hasPollComponents || canModerate) {
+                return;
+            }
+
+            if (message.deletable) {
+                await message.delete().catch(() => undefined);
+            }
+
+            await sendNotice('Ce salon est réservé aux sondages. Utilise les boutons de sondage de Discord !');
             return;
         }
 
