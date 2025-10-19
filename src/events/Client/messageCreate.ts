@@ -130,7 +130,8 @@ export default new Event({
         }
 
         if (pollOnlyIds.has(message.channelId)) {
-            const isPoll = (message.components && message.components.length > 0) ||
+            const isPoll = message.poll ||
+                          (message.components && message.components.length > 0) ||
                           message.system;
 
             if (isPoll || canModerate) {
