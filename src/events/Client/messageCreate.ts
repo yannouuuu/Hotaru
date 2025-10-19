@@ -5,6 +5,7 @@ import { SetupManager } from '../../utils/SetupManager.js';
 const READ_ONLY_KEYS = ['rankingProfs', 'roles', 'informations'] as const;
 const LINK_ONLY_KEYS = ['liensUtiles'] as const;
 const POLL_ONLY_KEYS = ['sondages'] as const;
+const MEDIA_ONLY_KEYS = ['pictures'] as const;
 const URL_PATTERN = /^(https?:\/\/|www\.)\S+$/i;
 
 export default new Event({
@@ -43,6 +44,14 @@ export default new Event({
             const channelId = channelsMap[key];
             if (channelId) {
                 pollOnlyIds.add(channelId);
+            }
+        }
+
+        const mediaOnlyIds = new Set<string>();
+        for (const key of MEDIA_ONLY_KEYS) {
+            const channelId = channelsMap[key];
+            if (channelId) {
+                mediaOnlyIds.add(channelId);
             }
         }
 
@@ -90,20 +99,20 @@ export default new Event({
 
             try {
                 const warningMessage = await message.channel.send({
-                    content: `${message.author} ${notice}`,
-                    reply: { messageReference: message.id }
+                    content: `${message.author} ${notice}`
                 });
 
                 setTimeout(() => {
                     warningMessage.delete().catch(() => {});
                 }, 5000);
-            } catch {
+            } catch (error) {
+                console.error('Erreur envoi warning dans channel:', error);
+                // Fallback MP seulement si channel.send échoue vraiment
                 try {
                     await message.author.send({
                         content: `${notice}\nSalon: #${message.channel.name}`
                     });
                 } catch {
-                    // DM impossible (paramètres de confidentialité)
                 }
             }
         };
@@ -121,9 +130,10 @@ export default new Event({
         }
 
         if (pollOnlyIds.has(message.channelId)) {
-            const hasPollComponents = message.components && message.components.length > 0;
+            const isPoll = (message.components && message.components.length > 0) ||
+                          message.system;
 
-            if (hasPollComponents || canModerate) {
+            if (isPoll || canModerate) {
                 return;
             }
 
@@ -132,6 +142,22 @@ export default new Event({
             }
 
             await sendNotice('Ce salon est réservé aux sondages. Utilise les boutons de sondage de Discord !');
+            return;
+        }
+
+        if (mediaOnlyIds.has(message.channelId)) {
+            const hasMedia = message.attachments.size > 0 ||
+                           message.embeds.some(embed => embed.image || embed.video);
+
+            if (hasMedia || canModerate) {
+                return;
+            }
+
+            if (message.deletable) {
+                await message.delete().catch(() => undefined);
+            }
+
+            await sendNotice('Ce salon est réservé aux images et médias. Partage seulement des photos/vidéos !');
             return;
         }
 
