@@ -8,15 +8,9 @@ import {
     Colors,
     type TextChannel
 } from 'discord.js';
-import type { SetupData, UsefulLink } from '../types/setup.js';
+import type { SetupData, UsefulLink } from '../types/index.js';
 
-/**
- * Gestionnaire des messages interactifs du setup
- */
 export class SetupMessages {
-    /**
-     * Message de vérification avec instructions
-     */
     static createVerificationMessage() {
         const embed = new EmbedBuilder()
             .setTitle('✅ Vérification')
@@ -41,10 +35,7 @@ export class SetupMessages {
         return { embeds: [embed], components: [row] };
     }
 
-    /**
-     * Message des rôles avec boutons
-     */
-    static createRolesMessage(roles: SetupData['roles']) {
+    static createRolesMessage() {
         const embed = new EmbedBuilder()
             .setTitle('🎭 Rôles')
             .setDescription(
@@ -80,9 +71,6 @@ export class SetupMessages {
         return { embeds: [embed], components: [row] };
     }
 
-    /**
-     * Message des liens utiles avec menu déroulant
-     */
     static createUsefulLinksMessage() {
         const embed = new EmbedBuilder()
             .setTitle('🔗 Ressources & Liens Utiles')
@@ -184,9 +172,6 @@ export class SetupMessages {
         return { embeds: [embed], components: [row] };
     }
 
-    /**
-     * Message de support avec bouton pour créer un ticket
-     */
     static createSupportMessage() {
         const embed = new EmbedBuilder()
             .setTitle('🎫 Support')
@@ -202,7 +187,7 @@ export class SetupMessages {
                 '**Bonnes pratiques :**\n' +
                 '• Préparez les informations utiles (captures, IDs, contexte)\n' +
                 '• Restez courtois et précis dans vos messages\n' +
-                '• Utilisez la commande \`/close-ticket\` quand tout est résolu\n\n' +
+                '• Utilisez la commande `/close-ticket` quand tout est résolu\n\n' +
                 '⚠️ **Attention :** Les tickets inutiles ou abusifs pourront être sanctionnés.'
             )
             .setColor(Colors.Yellow)
@@ -220,9 +205,6 @@ export class SetupMessages {
         return { embeds: [embed], components: [row] };
     }
 
-    /**
-     * Message du panel de contrôle pour les administrateurs
-     */
     static createControlPanelMessage() {
         const embed = new EmbedBuilder()
             .setTitle('🎛️ Panel de Contrôle')
@@ -257,9 +239,6 @@ export class SetupMessages {
         return { embeds: [embed], components: [row] };
     }
 
-    /**
-     * Envoyer tous les messages interactifs
-     */
     static async sendAllMessages(
         setupData: SetupData,
         channels: {
@@ -273,31 +252,26 @@ export class SetupMessages {
         const messages: Partial<SetupData['messages']> = {};
 
         try {
-            // Message de vérification
             const verificationMsg = await channels.verification.send(
                 this.createVerificationMessage()
             );
             messages.verification = verificationMsg.id;
 
-            // Message des rôles
             const rolesMsg = await channels.roles.send(
-                this.createRolesMessage(setupData.roles)
+                this.createRolesMessage()
             );
             messages.roles = rolesMsg.id;
 
-            // Message des liens utiles dans le canal informations
             const linksMsg = await channels.informations.send(
                 this.createUsefulLinksMessage()
             );
             messages.liensUtiles = linksMsg.id;
 
-            // Message de support
             const supportMsg = await channels.support.send(
                 this.createSupportMessage()
             );
             messages.support = supportMsg.id;
 
-            // Message du panel de contrôle
             const panelMsg = await channels.panelControle.send(
                 this.createControlPanelMessage()
             );
@@ -310,9 +284,6 @@ export class SetupMessages {
         }
     }
 
-    /**
-     * Message de progression du setup
-     */
     static createProgressMessage(
         step: number,
         totalSteps: number,
@@ -349,9 +320,6 @@ export class SetupMessages {
         return { embeds: [embed] };
     }
 
-    /**
-     * Créer une barre de progression
-     */
     private static createProgressBar(current: number, total: number): string {
         const barLength = 20;
         const filled = Math.round((current / total) * barLength);
@@ -360,9 +328,6 @@ export class SetupMessages {
         return `[${'█'.repeat(filled)}${'░'.repeat(empty)}]`;
     }
 
-    /**
-     * Message de confirmation du setup
-     */
     static createSetupCompleteMessage(setupData: SetupData) {
         const embed = new EmbedBuilder()
             .setTitle('✅ Configuration terminée !')
@@ -383,9 +348,6 @@ export class SetupMessages {
         return { embeds: [embed] };
     }
 
-    /**
-     * Message d'erreur du setup
-     */
     static createSetupErrorMessage(error: string, step: string) {
         const embed = new EmbedBuilder()
             .setTitle('❌ Erreur lors du setup')
@@ -402,9 +364,6 @@ export class SetupMessages {
         return { embeds: [embed] };
     }
 
-    /**
-     * Message avec logs détaillés du setup des channels
-     */
     static createChannelSetupLogsMessage(
         stats: { created: number; reused: number; total: number },
         logs: string[]
@@ -437,9 +396,6 @@ export class SetupMessages {
         return { embeds: [embed] };
     }
 
-    /**
-     * Message de progression avec détails de réutilisation
-     */
     static createProgressMessageWithStats(
         step: number,
         totalSteps: number,

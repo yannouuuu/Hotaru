@@ -1,6 +1,6 @@
 # Synchronisation Hyperplanning (ICS)
 
-La fonctionnalité `/edt` permet de connecter un emploi du temps Hyperplanning (ou n'importe quel flux iCalendar) au bot Hotaru afin d'afficher automatiquement le cours en cours ou le prochain cours.
+La fonctionnalité `/edt` permet de connecter un emploi du temps Hyperplanning (ou n'importe quel flux iCalendar) au bot afin d'afficher automatiquement le cours en cours ou le prochain cours.
 
 ## Pré-requis
 

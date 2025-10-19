@@ -1,6 +1,4 @@
-# Hotaru Discord Bot
-
-[![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
+<img alt="Hotaru: A Discord bot for student servers" src="assets/header.png" width="100%" />
 
 Hotaru is a production-grade Discord assistant tailored for university communities. It automates server bootstrapping, email-based verification, AI-assisted workflows, reminders, jobs feeds, and ticketing while staying fully typed with modern **Discord.js v14**, **TypeScript**, and the **Bun** runtime.
 
@@ -668,3 +666,5 @@ Built with:
 ---
 
 **Made with ❤️ and TypeScript**
+
+<img alt="Hotaru: A Discord bot for student servers" src="assets/footer.png" width="100%" />

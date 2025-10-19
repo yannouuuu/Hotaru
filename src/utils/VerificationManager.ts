@@ -135,9 +135,6 @@ export class VerificationManager {
         return nickname.trim() || null;
     }
 
-    /**
-     * Appliquer automatiquement le pseudo vérifié
-     */
     private async applyVerifiedNickname(member: GuildMember, email: string): Promise<void> {
         if (!member.manageable) return;
         const nickname = this.deriveNicknameFromEmail(email);

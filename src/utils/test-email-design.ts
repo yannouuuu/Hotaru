@@ -38,13 +38,4 @@ if (welcomeResult.success) {
     console.error('❌ Erreur:', welcomeResult.error);
 }
 
-console.log('🎨 Design Features:');
-console.log('  • Thème sombre (slate) inspiré de shadcn/ui');
-console.log('  • Dégradés violet pour l\'accent');
-console.log('  • Typographie moderne (Inter)');
-console.log('  • Code monospace avec style');
-console.log('  • Responsive design');
-console.log('  • Compatible email clients');
-console.log('\n✨ Test terminé !');
-
 process.exit(0);
