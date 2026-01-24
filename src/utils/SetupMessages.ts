@@ -40,8 +40,7 @@ export class SetupMessages {
             .setTitle('🎭 Rôles')
             .setDescription(
                 '**Récupérez vos rôles en cliquant sur les boutons ci-dessous :**\n\n' +
-                ` **Jobs** - Accédez au salon des offres de stage et d'emploi\n` +
-                `🎪 **Animation** - Accédez au salon des animations et créations\n\n` +
+                ` **Jobs** - Accédez au salon des offres de stage et d'emploi\n\n` +
                 '⚠️ Les rôles de modération (Délégué, Admin, Support) sont attribués par les administrateurs.'
             )
             .setColor(Colors.Purple)
@@ -54,12 +53,7 @@ export class SetupMessages {
                     .setCustomId('role_jobs')
                     .setLabel('Jobs')
                     .setEmoji('💼')
-                    .setStyle(ButtonStyle.Success),
-                new ButtonBuilder()
-                    .setCustomId('role_animation')
-                    .setLabel('Animation')
-                    .setEmoji('🎪')
-                    .setStyle(ButtonStyle.Secondary)
+                    .setStyle(ButtonStyle.Success)
             );
 
         return { embeds: [embed], components: [row] };

@@ -98,7 +98,7 @@ export interface JobsManagerStatus {
 
 const DEFAULT_SCOPE = 'api_offresdemploiv2 o2dsoffre';
 const DEFAULT_SEARCH_LIMIT = 5;
-const MAX_STORED_OFFERS = 200;
+const MAX_STORED_OFFERS = 1000;
 const DEFAULT_COMMUNES = ['59350', '59009', '59599', '59343'];
 
 const formatDateForFranceTravail = (date: Date): string =>
@@ -303,7 +303,8 @@ export class JobsManager {
         };
 
         const intervalMinutes = Number.parseInt(process.env.FRANCE_TRAVAIL_UPDATE_INTERVAL || '', 10);
-        this.updateInterval = Number.isFinite(intervalMinutes) && intervalMinutes > 0 ? intervalMinutes * 60_000 : 60 * 60_000;
+        // Default to 10 minutes if not configured
+        this.updateInterval = Number.isFinite(intervalMinutes) && intervalMinutes > 0 ? intervalMinutes * 60_000 : 10 * 60_000;
 
         const clientId = process.env.FRANCE_TRAVAIL_CLIENT_ID;
         const clientSecret = process.env.FRANCE_TRAVAIL_CLIENT_SECRET;
@@ -331,9 +332,14 @@ export class JobsManager {
             return;
         }
 
+        const intervalMins = Math.round(this.updateInterval / 60_000);
+        console.log(`✅ JobsManager démarré : vérification toutes les ${intervalMins} minutes.`);
+
         void this.refreshAllGuilds('startup');
         this.timer = setInterval(() => {
-            void this.refreshAllGuilds('scheduled');
+            this.refreshAllGuilds('scheduled').catch(err => {
+                console.error('❌ Erreur critique dans la boucle JobsManager:', err);
+            });
         }, this.updateInterval);
     }
 

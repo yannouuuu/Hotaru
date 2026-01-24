@@ -5,7 +5,7 @@ import { SetupManager } from '../../utils/SetupManager.js';
 const READ_ONLY_KEYS = ['rankingProfs', 'roles', 'informations'] as const;
 const LINK_ONLY_KEYS = ['liensUtiles'] as const;
 const POLL_ONLY_KEYS = ['sondages'] as const;
-const MEDIA_ONLY_KEYS = ['pictures'] as const;
+const MEDIA_ONLY_KEYS = ['photos'] as const;
 const URL_PATTERN = /^(https?:\/\/|www\.)\S+$/i;
 
 export default new Event({

@@ -44,7 +44,6 @@ export interface SetupData {
         admin: string;
         delegue: string;
         support: string;
-        animateur: string;
         etudiant: string;
         verifie: string;
         jobs: string;
@@ -66,10 +65,9 @@ export interface SetupData {
         roles: string;
         informations: string;
         rankingProfs: string;
-        animations: string;
         general: string;
         gossip: string;
-        pictures: string;
+        photos: string;
         wordle: string;
         citationsProfs: string;
         commandes: string;

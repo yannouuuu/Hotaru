@@ -130,12 +130,6 @@ export class SetupManager {
                 color: 0x2ecc71,
                 hoist: false,
                 mentionable: true
-            },
-            animation: {
-                name: '🎪 Animation',
-                color: 0xe91e63,
-                hoist: false,
-                mentionable: true
             }
         };
     }
@@ -300,7 +294,7 @@ export class SetupManager {
                         topic: 'Les potins du BUT Info'
                     },
                     {
-                        name: '📸・pictures',
+                        name: '📸・photos',
                         type: ChannelType.GuildText,
                         topic: 'Partagez vos photos ici'
                     },
@@ -375,21 +369,6 @@ export class SetupManager {
                                     PermissionFlagsBits.EmbedLinks,
                                     PermissionFlagsBits.AttachFiles
                                 ]
-                            }
-                        ]
-                    },
-                    {
-                        name: '🎪・animations',
-                        type: ChannelType.GuildText,
-                        topic: 'Partage d\'animations et de dessins animés créés par les membres',
-                        permissions: [
-                            {
-                                roleId: everyoneId,
-                                deny: [PermissionFlagsBits.ViewChannel]
-                            },
-                            {
-                                roleId: roles.animation,
-                                allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages]
                             }
                         ]
                     }
