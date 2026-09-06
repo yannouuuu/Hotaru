@@ -63,24 +63,33 @@ export class SetupMessages {
 
     static createUsefulLinksMessage() {
         const embed = new EmbedBuilder()
-            .setTitle('🔗 Ressources & Liens Utiles')
+            .setTitle('🔗 Vos contacts & Liens Utiles')
             .setDescription(
                 '**Bienvenue sur le serveur du BUT Informatique de l\'Université de Lille !**\n\n' +
-                '> Retrouvez ici tous les liens essentiels pour votre année universitaire.\n\n' +
-                '**📚 Plateforme d\'apprentissage :**\n' +
-                '• [Notion BUT1 2025-2026](https://www.notion.so/BUT1-Informatique-IUT-de-Lille-2025-2026-27b6e4f7ea6581998644c2590374d65b) - Ressources collaboratives\n' +
-                '• [Aide BUT Info](https://but-info.septhime.fr/) - Tutorat et aide aux devoirs\n\n' +
-                '**👥 Responsables du département :**\n' +
-                '• **Chef de département** : Frédéric Guyomarch ([frederic.guyomarch@univ-lille.fr](mailto:frederic.guyomarch@univ-lille.fr))\n' +
-                '• **Alternances** : Isabelle Delille ([isabelle.delille@univ-lille.fr](mailto:isabelle.delille@univ-lille.fr))\n\n' +
-                '**📋 Responsables par année :**\n' +
-                '**BUT 1** - Julien Baste ([julien.baste@univ-lille.fr](mailto:julien.baste@univ-lille.fr))\n' +
-                '**BUT 2** - Patricia Everaere ([patricia.everaere-caillier@univ-lille.fr](mailto:patricia.everaere-caillier@univ-lille.fr))\n' +
-                '**BUT 3** - Philippe Mathieu & Yvan Peter\n\n' +
+                '> Retrouvez ici vos contacts et les liens essentiels pour votre année universitaire.\n\n' +
+                '**👑 Département Informatique**\n' +
+                '• **Chef de département :** Yvan Peter — [yvan.peter@univ-lille.fr](mailto:yvan.peter@univ-lille.fr)\n' +
+                '• **Responsable alternances :** Isabelle Delille — [isabelle.delille@univ-lille.fr](mailto:isabelle.delille@univ-lille.fr)\n\n' +
+                '**1️⃣ Première année (BUT 1)**\n' +
+                '• **Responsable 1ère année :** Julien Baste — [julien.baste@univ-lille.fr](mailto:julien.baste@univ-lille.fr)\n' +
+                '• **Responsable réussite :** Fabien Delecroix — [fabien.delecroix@univ-lille.fr](mailto:fabien.delecroix@univ-lille.fr)\n' +
+                '• **Secrétaire :** Marie Ryckebosch — [marie.ryckebosch@univ-lille.fr](mailto:marie.ryckebosch@univ-lille.fr)\n' +
+                '• **Gestion EDT :** Deise Santana Maia — [deise.santanamaia@univ-lille.fr](mailto:deise.santanamaia@univ-lille.fr)\n\n' +
+                '**2️⃣ Deuxième année (BUT 2)**\n' +
+                '• **Responsable :** Patricia Everaere — [patricia.everaere-caillier@univ-lille.fr](mailto:patricia.everaere-caillier@univ-lille.fr)\n' +
+                '• **Secrétaire :** Ines Fedjkhi — [ines.fedjkhi@univ-lille.fr](mailto:ines.fedjkhi@univ-lille.fr)\n' +
+                '• **Gestion EDT :** Isabelle Delille — [isabelle.delille@univ-lille.fr](mailto:isabelle.delille@univ-lille.fr)\n\n' +
+                '**3️⃣ Troisième année (BUT 3)**\n' +
+                '• **Responsables :** Philippe Mathieu — [philippe.mathieu@univ-lille.fr](mailto:philippe.mathieu@univ-lille.fr) | Mickaël Hauspie — [mickael.hauspie@univ-lille.fr](mailto:mickael.hauspie@univ-lille.fr)\n' +
+                '• **Secrétaire :** Ines Fedjkhi — [ines.fedjkhi@univ-lille.fr](mailto:ines.fedjkhi@univ-lille.fr)\n' +
+                '• **Gestion EDT :** Marie Deletombe — [marie.deletombe@univ-lille.fr](mailto:marie.deletombe@univ-lille.fr)\n\n' +
                 '**📌 Absences :**\n' +
-                '• Prévenez ou écrivez au secrétariat de l\'IUT : [marie.ryckebosch@univ-lille.fr](mailto:marie.ryckebosch@univ-lille.fr)\n' +
-                '• Fournissez un justificatif valide sous 72h après le premier jour d\'absence\n' +
-                '• Pour un examen raté, un rattrapage est possible avec justificatif ; le secrétariat vous accompagnera pour l\'inscription (généralement un jeudi après-midi ou fin de semestre)\n\n' +
+                'Pour justifier vos absences, contactez la secrétaire de votre promo via Zimbra avec votre justificatif.\n\n' +
+                '**🔗 Liens utiles :**\n' +
+                '• [Emploi du temps](https://edt-iut.univ-lille.fr/) • [Notes](https://bulletin.iut-info.univ-lille.fr/)\n' +
+                '• [Zimbra](https://zimbra.univ-lille.fr/) • [Moodle](https://moodle.univ-lille.fr/)\n' +
+                '• [Aide BUT Info](https://but-info.septhime.fr/) • [Sport](https://sport.univ-lille.fr/) • [ENT](https://ent.univ-lille.fr/)\n\n' +
+                '⚠️ *Certaines informations peuvent être erronées en raison des récents changements administratifs dans le BUT. Si vous voyez une erreur, n\'hésitez pas à nous la signaler !*\n\n' +
                 '💡 *Utilisez le menu déroulant ci-dessous pour accéder rapidement aux plateformes*'
             )
             .setColor(0x7289da)
@@ -113,12 +122,6 @@ export class SetupMessages {
                 url: 'https://moodle.univ-lille.fr/'
             },
             {
-                label: '🎓 ENT - Espace numérique',
-                description: 'Environnement Numérique de Travail',
-                emoji: '🎓',
-                url: 'https://ent.univ-lille.fr/'
-            },
-            {
                 label: '💡 Aide BUT Info',
                 description: 'Tutorat - En partenariat avec le tutorat',
                 emoji: '💡',
@@ -131,10 +134,10 @@ export class SetupMessages {
                 url: 'https://sport.univ-lille.fr/'
             },
             {
-                label: '📝 Notion BUT1 2025-2026',
-                description: 'Ressources collaboratives par Yann',
-                emoji: '📝',
-                url: 'https://www.notion.so/BUT1-Informatique-IUT-de-Lille-2025-2026-27b6e4f7ea6581998644c2590374d65b'
+                label: '🎓 ENT - Espace numérique',
+                description: 'Environnement Numérique de Travail et autres liens utiles',
+                emoji: '🎓',
+                url: 'https://ent.univ-lille.fr/'
             }
         ];
 

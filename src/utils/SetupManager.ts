@@ -196,6 +196,48 @@ export class SetupManager {
                         ]
                     },
                     {
+                        name: '🔔・notifications-parcours-a',
+                        type: ChannelType.GuildText,
+                        topic: 'Notifications du parcours A',
+                        permissions: [
+                            {
+                                roleId: everyoneId,
+                                deny: [PermissionFlagsBits.ViewChannel]
+                            },
+                            {
+                                roleId: roles.verifie,
+                                allow: [PermissionFlagsBits.ViewChannel],
+                                deny: [PermissionFlagsBits.SendMessages]
+                            },
+                            {
+                                roleId: roles.etudiant,
+                                allow: [PermissionFlagsBits.ViewChannel],
+                                deny: [PermissionFlagsBits.SendMessages]
+                            }
+                        ]
+                    },
+                    {
+                        name: '🔔・notifications-parcours-b',
+                        type: ChannelType.GuildText,
+                        topic: 'Notifications du parcours B',
+                        permissions: [
+                            {
+                                roleId: everyoneId,
+                                deny: [PermissionFlagsBits.ViewChannel]
+                            },
+                            {
+                                roleId: roles.verifie,
+                                allow: [PermissionFlagsBits.ViewChannel],
+                                deny: [PermissionFlagsBits.SendMessages]
+                            },
+                            {
+                                roleId: roles.etudiant,
+                                allow: [PermissionFlagsBits.ViewChannel],
+                                deny: [PermissionFlagsBits.SendMessages]
+                            }
+                        ]
+                    },
+                    {
                         name: '🎭・rôles',
                         type: ChannelType.GuildText,
                         topic: 'Récupérez vos rôles ici',
@@ -292,21 +334,6 @@ export class SetupManager {
                         topic: 'Discussions générales'
                     },
                     {
-                        name: '🗣️・gossip',
-                        type: ChannelType.GuildText,
-                        topic: 'Les potins du BUT Info'
-                    },
-                    {
-                        name: '📸・photos',
-                        type: ChannelType.GuildText,
-                        topic: 'Partagez vos photos ici'
-                    },
-                    {
-                        name: '🟩・wordle',
-                        type: ChannelType.GuildText,
-                        topic: 'Jouez au Wordle du jour'
-                    },
-                    {
                         name: '💭・citations-profs',
                         type: ChannelType.GuildText,
                         topic: 'Les meilleures citations de vos profs'
@@ -345,6 +372,11 @@ export class SetupManager {
                         name: '😂・memes',
                         type: ChannelType.GuildText,
                         topic: 'Memes et contenu drôle'
+                    },
+                    {
+                        name: '💻・partage',
+                        type: ChannelType.GuildText,
+                        topic: 'Partagez vos projets de code, repos GitHub et projets perso'
                     },
                     {
                         name: '🔗・liens-utiles',
@@ -1015,6 +1047,28 @@ export class SetupManager {
                 };
 
                 await this.delay(500);
+            }
+
+            // Ordonner les catégories : SYSTÈME, groupes de promo, DISCUSSIONS, puis les autres
+            const categories = this.setupData.categories as Record<string, string> | undefined;
+            if (categories) {
+                const orderedIds = [
+                    categories.systeme,
+                    ...groupKeys.map(k => groups[k]?.categoryId),
+                    categories.discussions,
+                    categories.vocaux,
+                    categories.cours,
+                    categories.support,
+                    categories.moderation
+                ].filter(Boolean) as string[];
+
+                for (let i = 0; i < orderedIds.length; i++) {
+                    const category = this.guild.channels.cache.get(orderedIds[i]);
+                    if (category && !category.isThread()) {
+                        await category.setPosition(i);
+                        await this.delay(300);
+                    }
+                }
             }
 
             const promo: PromoConfig = {

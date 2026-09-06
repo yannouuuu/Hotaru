@@ -48,7 +48,7 @@ export class VerificationMessages {
                 `👨‍🎓 Vous avez reçu le rôle **"Étudiant"**\n` +
                 `🔓 Vous avez maintenant accès aux salons généraux du serveur\n\n` +
                 '**Accès disponibles :**\n' +
-                '💬 Discussions générales et gossip\n' +
+                '💬 Discussions générales\n' +
                 '🔊 Salons vocaux pour les cours/projets\n' +
                 '📚 Entraide et partage de cours\n' +
                 '🎮 Détente entre les cours\n\n' +

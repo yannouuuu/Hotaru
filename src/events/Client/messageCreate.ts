@@ -5,7 +5,6 @@ import { SetupManager } from '../../utils/SetupManager.js';
 const READ_ONLY_KEYS = ['rankingProfs', 'roles', 'informations'] as const;
 const LINK_ONLY_KEYS = ['liensUtiles'] as const;
 const POLL_ONLY_KEYS = ['sondages'] as const;
-const MEDIA_ONLY_KEYS = ['photos'] as const;
 const URL_PATTERN = /^(https?:\/\/|www\.)\S+$/i;
 
 export default new Event({
@@ -44,14 +43,6 @@ export default new Event({
             const channelId = channelsMap[key];
             if (channelId) {
                 pollOnlyIds.add(channelId);
-            }
-        }
-
-        const mediaOnlyIds = new Set<string>();
-        for (const key of MEDIA_ONLY_KEYS) {
-            const channelId = channelsMap[key];
-            if (channelId) {
-                mediaOnlyIds.add(channelId);
             }
         }
 
@@ -143,22 +134,6 @@ export default new Event({
             }
 
             await sendNotice('Ce salon est réservé aux sondages. Utilise les boutons de sondage de Discord !');
-            return;
-        }
-
-        if (mediaOnlyIds.has(message.channelId)) {
-            const hasMedia = message.attachments.size > 0 ||
-                           message.embeds.some(embed => embed.image || embed.video);
-
-            if (hasMedia || canModerate) {
-                return;
-            }
-
-            if (message.deletable) {
-                await message.delete().catch(() => undefined);
-            }
-
-            await sendNotice('Ce salon est réservé aux images et médias. Partage seulement des photos/vidéos !');
             return;
         }
 
