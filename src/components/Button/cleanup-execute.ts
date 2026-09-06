@@ -98,6 +98,51 @@ export default new Component({
                 }
             }
 
+            // Étape 3.5 : Supprimer les artefacts du mode promo (groupes A–N)
+            let deletedPromoChannels = 0;
+            let deletedPromoCategories = 0;
+            let deletedPromoRoles = 0;
+
+            const promo = setupData.promo;
+            if (promo?.mode && promo.groups) {
+                for (const group of Object.values(promo.groups)) {
+                    for (const channelId of Object.values(group.channels)) {
+                        try {
+                            const channel = guild.channels.cache.get(channelId);
+                            if (channel) {
+                                await channel.delete('Cleanup du setup (promo)');
+                                deletedPromoChannels++;
+                                await new Promise(resolve => setTimeout(resolve, 300));
+                            }
+                        } catch (error) {
+                            console.error(`Erreur lors de la suppression du salon promo ${channelId}:`, error);
+                        }
+                    }
+
+                    try {
+                        const category = guild.channels.cache.get(group.categoryId);
+                        if (category && category.type === ChannelType.GuildCategory) {
+                            await category.delete('Cleanup du setup (promo)');
+                            deletedPromoCategories++;
+                            await new Promise(resolve => setTimeout(resolve, 300));
+                        }
+                    } catch (error) {
+                        console.error(`Erreur lors de la suppression de la catégorie promo ${group.categoryId}:`, error);
+                    }
+
+                    try {
+                        const role = guild.roles.cache.get(group.roleId);
+                        if (role && role.id !== guild.id) {
+                            await role.delete('Cleanup du setup (promo)');
+                            deletedPromoRoles++;
+                            await new Promise(resolve => setTimeout(resolve, 300));
+                        }
+                    } catch (error) {
+                        console.error(`Erreur lors de la suppression du rôle promo ${group.roleId}:`, error);
+                    }
+                }
+            }
+
             // Étape 4 : Supprimer les données de la base de données
             SetupManager.deleteSetupData(client, guild.id);
 
@@ -107,9 +152,10 @@ export default new Component({
                 .setDescription(
                     '**Tous les éléments créés par le setup ont été supprimés.**\n\n' +
                     '**Résumé de la suppression :**\n' +
-                    `💬 **Salons supprimés :** ${deletedChannels}\n` +
-                    `📁 **Catégories supprimées :** ${deletedCategories}\n` +
-                    `🎭 **Rôles supprimés :** ${deletedRoles}\n\n` +
+                    `💬 **Salons supprimés :** ${deletedChannels + deletedPromoChannels}\n` +
+                    `📁 **Catégories supprimées :** ${deletedCategories + deletedPromoCategories}\n` +
+                    `🎭 **Rôles supprimés :** ${deletedRoles + deletedPromoRoles}\n` +
+                    (deletedPromoRoles > 0 ? `🎓 **Groupes promo supprimés :** ${deletedPromoRoles}\n` : '') +
                     '**Base de données nettoyée.**\n\n' +
                     'Vous pouvez maintenant refaire un `/setup` si vous le souhaitez.'
                 )

@@ -8,7 +8,9 @@ import {
     Colors,
     type TextChannel
 } from 'discord.js';
-import type { SetupData, UsefulLink } from '../types/index.js';
+import type { SetupData, UsefulLink, PromoGroup, PromoConfig } from '../types/index.js';
+import type { DiscordBot } from '../client/DiscordBot.js';
+import { SetupManager } from './SetupManager.js';
 
 export class SetupMessages {
     static createVerificationMessage() {
@@ -426,5 +428,127 @@ export class SetupMessages {
             .setTimestamp();
 
         return { embeds: [embed] };
+    }
+
+    /**
+     * Panneau de sélection de classe pour les groupes de promo
+     */
+    static createPromoPanel(revealedGroups: PromoGroup[]): { embeds: EmbedBuilder[]; components: ActionRowBuilder<StringSelectMenuBuilder>[] } {
+        const embed = new EmbedBuilder()
+            .setTitle('📚 Choisis ta classe de promotion')
+            .setDescription(
+                '**Bienvenue dans ta promo !**\n\n' +
+                'Sélectionne ton **groupe de TD** dans le menu ci-dessous pour accéder à ton salon privé.\n\n' +
+                (revealedGroups.length > 0
+                    ? `**Groupes disponibles :** ${revealedGroups.map(g => g.key).join(', ')}\n\nPlus de groupes seront dévoilés progressivement.`
+                    : '_Aucun groupe n\'est disponible pour le moment. Revenez plus tard !_')
+            )
+            .setColor(Colors.Blurple)
+            .setFooter({ text: 'Hotaru - Sélection de classe' })
+            .setTimestamp();
+
+        if (revealedGroups.length === 0) {
+            const row = new ActionRowBuilder<StringSelectMenuBuilder>()
+                .addComponents(
+                    new StringSelectMenuBuilder()
+                        .setCustomId('class_select')
+                        .setPlaceholder('🚫 Aucun groupe disponible')
+                        .setDisabled(true)
+                        .addOptions({
+                            label: 'Bientôt disponible',
+                            description: 'Revenez plus tard pour choisir votre groupe',
+                            value: 'unavailable'
+                        })
+                );
+            return { embeds: [embed], components: [row] };
+        }
+
+        const select = new StringSelectMenuBuilder()
+            .setCustomId('class_select')
+            .setPlaceholder('🎓 Sélectionnez votre groupe (A–N)')
+            .setMinValues(1)
+            .setMaxValues(1)
+            .addOptions(
+                revealedGroups.map(group => {
+                    const option = new StringSelectMenuOptionBuilder()
+                        .setLabel(group.name)
+                        .setDescription(`Salon privé du groupe ${group.key}`)
+                        .setValue(group.key);
+                    return option;
+                })
+            );
+
+        return { embeds: [embed], components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(select)] };
+    }
+
+    /**
+     * Message affiché après un choix de groupe
+     */
+    static createClassAssignedMessage(groupName: string, channels: string[]): { embeds: EmbedBuilder[] } {
+        const channelsList = channels.length > 0
+            ? channels.map(c => `🔓 **#${c}**`).join('\n')
+            : '_Aucun salon disponible pour le moment._';
+
+        const embed = new EmbedBuilder()
+            .setTitle('🎓 Classe attribuée !')
+            .setDescription(
+                `**Félicitations !**\n\n` +
+                `Tu as rejoint le **${groupName}**.\n\n` +
+                `**Salons qui s'ouvrent :**\n${channelsList}\n\n` +
+                'Les salons suivants de ton groupe seront dévoilés progressivement au fil des semaines. Profite bien de ton espace de groupe !'
+            )
+            .setColor(Colors.Green)
+            .setFooter({ text: 'Hotaru - Classe de promotion' })
+            .setTimestamp();
+
+        return { embeds: [embed] };
+    }
+
+    /**
+     * Message affichant le lien d'invitation de la promo
+     */
+    static createInviteMessage(inviteLink: string): { embeds: EmbedBuilder[] } {
+        const embed = new EmbedBuilder()
+            .setTitle('🔗 Invitation de promotion')
+            .setDescription(
+                '**Partage ce lien avec toute ta promo pour qu\'ils rejoignent le serveur :**\n\n' +
+                `**[Cliquez ici pour rejoindre le serveur](${inviteLink})**\n\n` +
+                '🔒 Une fois inscrits, les étudiants devront se vérifier avec leur email universitaire, puis choisir leur groupe de TD.'
+            )
+            .setColor(Colors.DarkBlue)
+            .setFooter({ text: 'Hotaru - Invitation promo' })
+            .setTimestamp();
+
+        return { embeds: [embed] };
+    }
+
+    /**
+     * Message de récapitulatif du mode promo à la fin du setup
+     */
+    static createPromoCompleteMessage(promo: PromoConfig): { embeds: EmbedBuilder[] } {
+        const groupCount = promo.groupKeys.length;
+
+        const embed = new EmbedBuilder()
+            .setTitle('✅ Mode promotion activé !')
+            .setDescription(
+                `**Le mode promo vient d'être configuré pour ce serveur.**\n\n` +
+                `🎓 **Groupes créés :** ${groupCount} (A à ${promo.groupKeys[promo.groupKeys.length - 1]})\n` +
+                '📁 **Salons privés :** 4 par groupe (général, devoirs, cours, vocal)\n' +
+                `🔓 **Révélation progressive :** activée — les groupes s'ouvrent petit à petit\n\n` +
+                'Utilisez `/group reveal <lettre>` pour dévoiler un groupe à la fois.'
+            )
+            .setColor(Colors.DarkGreen)
+            .setFooter({ text: 'Hotaru - Mode promo' })
+            .setTimestamp();
+
+        return { embeds: [embed] };
+    }
+
+    /**
+     * Rafraîchir le panneau de sélection de classe avec les groupes révélés à jour
+     */
+    static refreshPromoPanel(client: DiscordBot, guildId: string): { embeds: EmbedBuilder[]; components: ActionRowBuilder<StringSelectMenuBuilder>[] } {
+        const revealedGroups = SetupManager.getRevealedGroups(client, guildId);
+        return this.createPromoPanel(revealedGroups);
     }
 }

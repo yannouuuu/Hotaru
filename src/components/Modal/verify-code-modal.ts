@@ -74,8 +74,11 @@ export default new Component({
         }
 
         // Succès ! Afficher le message de réussite
+        const setupData: any = client.database.get(`setup_${interaction.guildId}`);
+        const promoMode = !!setupData?.promo?.mode;
+
         await interaction.editReply(
-            VerificationMessages.createVerificationSuccessMessage()
+            VerificationMessages.createVerificationSuccessMessage(promoMode)
         );
     }
 }).toJSON();

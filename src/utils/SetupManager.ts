@@ -1,5 +1,6 @@
 import {
     Guild,
+    GuildMember,
     TextChannel,
     VoiceChannel,
     PermissionFlagsBits,
@@ -14,7 +15,9 @@ import type {
     ChannelConfig,
     SetupData,
     SetupStepResult,
-    ChannelPermissionConfig
+    ChannelPermissionConfig,
+    PromoConfig,
+    PromoGroup
 } from '../types/setup.js';
 
 /**
@@ -910,6 +913,361 @@ export class SetupManager {
      */
     getSetupData(): Partial<SetupData> {
         return this.setupData;
+    }
+
+    /**
+     * Clés de groupes de promo par défaut (A à N, l'alphabet)
+     */
+    private static readonly DEFAULT_GROUP_KEYS: string[] =
+        Array.from({ length: 14 }, (_, i) => String.fromCharCode(65 + i));
+
+    /**
+     * Créer tous les groupes de promo (rôles, catégories, salons privés)
+     * Les salons sont créés verrouillés : seul le premier (général) est débloqué,
+     * le reste s'ouvre progressivement selon progressiveReveal.
+     */
+    async createPromoGroups(): Promise<SetupStepResult> {
+        try {
+            const roles = this.setupData.roles as Record<string, string> | undefined;
+            if (!roles) {
+                throw new Error('Les rôles doivent être créées avant les groupes de promo');
+            }
+
+            const everyoneId = this.guild.roles.everyone.id;
+            const groupKeys = SetupManager.DEFAULT_GROUP_KEYS;
+            const progressiveEnabled = true;
+
+            const groups: Record<string, PromoGroup> = {};
+
+            for (const key of groupKeys) {
+                const groupRoleName = `🎓 Groupe ${key}`;
+
+                const role = await this.guild.roles.create({
+                    name: groupRoleName,
+                    color: 0x3498db,
+                    hoist: true,
+                    mentionable: true
+                });
+
+                const category = await this.guild.channels.create({
+                    name: `📚 Groupe ${key}`,
+                    type: ChannelType.GuildCategory,
+                    permissionOverwrites: this.buildPermissionOverwrites([
+                        { roleId: everyoneId, deny: [PermissionFlagsBits.ViewChannel] },
+                        { roleId: role.id, allow: [PermissionFlagsBits.ViewChannel] }
+                    ])
+                });
+
+                const channelDefs: Array<{ key: string; name: string; type: ChannelType; topic?: string }> = [
+                    { key: 'general', name: `💬・general-${key.toLowerCase()}`, type: ChannelType.GuildText, topic: `Discussion du groupe ${key}` },
+                    { key: 'devoirs', name: `📝・devoirs-${key.toLowerCase()}`, type: ChannelType.GuildText, topic: `Devoirs du groupe ${key}` },
+                    { key: 'cours', name: `📚・cours-${key.toLowerCase()}`, type: ChannelType.GuildText, topic: `Partage de cours du groupe ${key}` },
+                    { key: 'vocal', name: `🔊・vocal-${key.toLowerCase()}`, type: ChannelType.GuildVoice }
+                ];
+
+                const channels: Record<string, string> = {};
+                const channelRevealOrder = channelDefs.map(d => d.key);
+                const unlockedChannels: string[] = progressiveEnabled ? ['general'] : channelRevealOrder;
+
+                for (const def of channelDefs) {
+                    const isUnlocked = unlockedChannels.includes(def.key);
+                    const perms: ChannelPermissionConfig[] = [
+                        { roleId: everyoneId, deny: [PermissionFlagsBits.ViewChannel] }
+                    ];
+
+                    if (def.type === ChannelType.GuildVoice) {
+                        if (isUnlocked) {
+                            perms.push({ roleId: role.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.Connect, PermissionFlagsBits.Speak] });
+                        } else {
+                            perms.push({ roleId: role.id, deny: [PermissionFlagsBits.ViewChannel] });
+                        }
+                    } else {
+                        if (isUnlocked) {
+                            perms.push({ roleId: role.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory] });
+                        } else {
+                            perms.push({ roleId: role.id, deny: [PermissionFlagsBits.ViewChannel] });
+                        }
+                    }
+
+                    const channel = await this.guild.channels.create({
+                        name: def.name,
+                        type: def.type as any,
+                        parent: category.id,
+                        topic: def.topic,
+                        permissionOverwrites: this.buildPermissionOverwrites(perms)
+                    });
+
+                    channels[def.key] = channel.id;
+                    this.setupLogs.push(`📦 Salon groupe ${key}: ${channel.name}`);
+                    await this.delay(500);
+                }
+
+                groups[key] = {
+                    key,
+                    name: groupRoleName,
+                    roleId: role.id,
+                    categoryId: category.id,
+                    channels,
+                    revealed: false,
+                    revealedAt: 0,
+                    channelRevealOrder,
+                    unlockedChannels
+                };
+
+                await this.delay(500);
+            }
+
+            const promo: PromoConfig = {
+                mode: true,
+                groups,
+                groupKeys,
+                progressiveReveal: { enabled: progressiveEnabled, intervalDays: 7 }
+            };
+
+            this.setupData.promo = promo as any;
+
+            return {
+                success: true,
+                message: `✅ ${groupKeys.length} groupes de promo créés (rôles, catégories, salons privés)`,
+                data: { groupCount: groupKeys.length }
+            };
+        } catch (error) {
+            return {
+                success: false,
+                message: '❌ Erreur lors de la création des groupes de promo',
+                error: error as Error
+            };
+        }
+    }
+
+    /**
+     * Générer un lien d'invitation permanent du serveur
+     */
+    async generateInviteLink(): Promise<string | null> {
+        try {
+            let targetChannelId = (this.setupData.channels as Record<string, string> | undefined)?.general;
+
+            if (!targetChannelId) {
+                targetChannelId = this.guild.channels.cache
+                    .filter(c => c.type === ChannelType.GuildText && c.viewable)
+                    .first()?.id;
+            }
+
+            if (!targetChannelId) return null;
+
+            const invite = await this.guild.invites.create(targetChannelId, {
+                maxAge: 0,
+                maxUses: 0,
+                unique: true
+            });
+
+            return invite.url;
+        } catch (error) {
+            console.error('Erreur lors de la génération du lien d\'invitation:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Obtenir la configuration promo depuis la base de données
+     */
+    static getPromoConfig(client: DiscordBot, guildId: string): PromoConfig | null {
+        const setupData: any = client.database.get(`setup_${guildId}`);
+        return setupData?.promo || null;
+    }
+
+    /**
+     * Sauvegarder la configuration promo
+     */
+    static savePromoConfig(client: DiscordBot, guildId: string, promo: PromoConfig): void {
+        const setupData: any = client.database.get(`setup_${guildId}`) || {};
+        setupData.promo = promo;
+        client.database.set(`setup_${guildId}`, setupData);
+    }
+
+    /**
+     * Obtenir la liste des groupes révélés (disponibles à la sélection)
+     */
+    static getRevealedGroups(client: DiscordBot, guildId: string): PromoGroup[] {
+        const promo = SetupManager.getPromoConfig(client, guildId);
+        if (!promo) return [];
+        return promo.groupKeys
+            .map(k => promo.groups[k])
+            .filter(g => g && g.revealed) as PromoGroup[];
+    }
+
+    /**
+     * Révéler un groupe (le rendre sélectionnable + débloquer le premier salon)
+     */
+    static async revealGroup(client: DiscordBot, guildId: string, groupKey: string): Promise<boolean> {
+        const promo = SetupManager.getPromoConfig(client, guildId);
+        if (!promo) return false;
+
+        const group = promo.groups[groupKey];
+        if (!group || group.revealed) return false;
+
+        const guild = client.guilds.cache.get(guildId);
+        if (!guild) return false;
+
+        group.revealed = true;
+        group.revealedAt = Date.now();
+
+        const firstKey = group.channelRevealOrder[0];
+        if (firstKey && !group.unlockedChannels.includes(firstKey)) {
+            await SetupManager.unlockChannelInGuild(guild, group, firstKey);
+            group.unlockedChannels.push(firstKey);
+        }
+
+        SetupManager.savePromoConfig(client, guildId, promo);
+        return true;
+    }
+
+    /**
+     * Débloquer tous les salons d'un groupe dont l'activation est due
+     */
+    static async unlockDueChannels(client: DiscordBot, guildId: string, groupKey: string): Promise<number> {
+        const promo = SetupManager.getPromoConfig(client, guildId);
+        if (!promo?.groups[groupKey]) return 0;
+
+        const group = promo.groups[groupKey];
+        if (!group.revealed || group.revealedAt === 0) return 0;
+
+        const guild = client.guilds.cache.get(guildId);
+        if (!guild) return 0;
+
+        let unlocked = 0;
+        const now = Date.now();
+
+        if (!promo.progressiveReveal.enabled) {
+            const toUnlock = group.channelRevealOrder.filter(k => !group.unlockedChannels.includes(k));
+            for (const key of toUnlock) {
+                await SetupManager.unlockChannelInGuild(guild, group, key);
+                group.unlockedChannels.push(key);
+                unlocked++;
+            }
+        } else {
+            const interval = promo.progressiveReveal.intervalDays * 24 * 60 * 60 * 1000;
+            for (let i = 0; i < group.channelRevealOrder.length; i++) {
+                const key = group.channelRevealOrder[i];
+                if (group.unlockedChannels.includes(key)) continue;
+                const dueAt = group.revealedAt + (i * interval);
+                if (now >= dueAt) {
+                    await SetupManager.unlockChannelInGuild(guild, group, key);
+                    group.unlockedChannels.push(key);
+                    unlocked++;
+                }
+            }
+        }
+
+        if (unlocked > 0) SetupManager.savePromoConfig(client, guildId, promo);
+        return unlocked;
+    }
+
+    /**
+     * Forcer le déblocage du prochain salon d'un groupe (usage admin)
+     */
+    static async unlockNextChannel(client: DiscordBot, guildId: string, groupKey: string): Promise<{ unlocked: boolean; channelKey?: string }> {
+        const promo = SetupManager.getPromoConfig(client, guildId);
+        if (!promo?.groups[groupKey]) return { unlocked: false };
+
+        const group = promo.groups[groupKey];
+        const nextKey = group.channelRevealOrder.find(k => !group.unlockedChannels.includes(k));
+        if (!nextKey) return { unlocked: false };
+
+        const guild = client.guilds.cache.get(guildId);
+        if (!guild) return { unlocked: false };
+
+        await SetupManager.unlockChannelInGuild(guild, group, nextKey);
+        group.unlockedChannels.push(nextKey);
+        SetupManager.savePromoConfig(client, guildId, promo);
+
+        return { unlocked: true, channelKey: nextKey };
+    }
+
+    /**
+     * Mettre à jour les permissions pour débloquer un salon de groupe
+     */
+    private static async unlockChannelInGuild(guild: Guild, group: PromoGroup, channelKey: string): Promise<void> {
+        const channelId = group.channels[channelKey];
+        if (!channelId) return;
+
+        const channel = guild.channels.cache.get(channelId);
+        if (!channel || channel.isThread()) return;
+
+        const isVoice = channel.type === ChannelType.GuildVoice;
+
+        if (isVoice) {
+            await channel.permissionOverwrites.edit(group.roleId, {
+                ViewChannel: true,
+                Connect: true,
+                Speak: true
+            });
+        } else {
+            await channel.permissionOverwrites.edit(group.roleId, {
+                ViewChannel: true,
+                SendMessages: true,
+                ReadMessageHistory: true
+            });
+        }
+    }
+
+    /**
+     * Assigner un groupe à un utilisateur (rôle + enregistrement + déblocage des salons dus)
+     */
+    static async assignGroupToUser(client: DiscordBot, member: GuildMember, groupKey: string): Promise<{ success: boolean; message: string; unlockedChannels?: string[] }> {
+        const guildId = member.guild.id;
+        const promo = SetupManager.getPromoConfig(client, guildId);
+        if (!promo?.groups[groupKey]) {
+            return { success: false, message: '❌ Ce groupe n\'existe pas ou n\'est pas disponible.' };
+        }
+
+        const group = promo.groups[groupKey];
+        if (!group.revealed) {
+            return { success: false, message: '❌ Ce groupe n\'est pas encore disponible. Revenez plus tard !' };
+        }
+
+        try {
+            await member.roles.add(group.roleId);
+        } catch {
+            return { success: false, message: '❌ Impossible d\'attribuer le rôle du groupe.' };
+        }
+
+        const verified: any = client.database.get(`verification_${guildId}.verifiedUsers.${member.user.id}`);
+        if (verified) {
+            verified.groupId = groupKey;
+            client.database.set(`verification_${guildId}.verifiedUsers.${member.user.id}`, verified);
+        }
+
+        await SetupManager.unlockDueChannels(client, guildId, groupKey);
+
+        const visibleChannels = group.unlockedChannels
+            .map(k => group.channels[k])
+            .map(id => member.guild.channels.cache.get(id)?.name)
+            .filter(Boolean) as string[];
+
+        return {
+            success: true,
+            message: `✅ Vous avez rejoint le **${group.name}** !`,
+            unlockedChannels: visibleChannels
+        };
+    }
+
+    /**
+     * Vérifier périodiquement tous les serveurs pour débloquer les salons dus
+     */
+    static async checkProgress(client: DiscordBot): Promise<void> {
+        for (const [guildId] of client.guilds.cache) {
+            const promo = SetupManager.getPromoConfig(client, guildId);
+            if (!promo?.mode) continue;
+
+            for (const key of promo.groupKeys) {
+                try {
+                    await SetupManager.unlockDueChannels(client, guildId, key);
+                } catch (err) {
+                    console.error(`Erreur unlock groupe ${key} (${guildId}):`, err);
+                }
+            }
+        }
     }
 
     /**

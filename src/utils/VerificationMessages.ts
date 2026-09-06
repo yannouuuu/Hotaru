@@ -39,26 +39,39 @@ export class VerificationMessages {
     /**
      * Message de succès après validation
      */
-    static createVerificationSuccessMessage(): { embeds: EmbedBuilder[] } {
+    static createVerificationSuccessMessage(showClassButton: boolean = false): { embeds: EmbedBuilder[]; components?: ActionRowBuilder<ButtonBuilder>[] } {
         const embed = new EmbedBuilder()
             .setTitle('🎉 Vérification réussie !')
             .setDescription(
                 `**Excellent !** Votre compte étudiant a été vérifié avec succès.\n\n` +
                 `✅ Vous avez reçu le rôle **"✅ Vérifié"**\n` +
                 `👨‍🎓 Vous avez reçu le rôle **"Étudiant"**\n` +
-                `🔓 Vous avez maintenant accès à tous les salons du serveur\n\n` +
-                `**Accès disponibles :**\n` +
-                `💬 Discussions générales et gossip\n` +
-                `🔊 Salons vocaux pour les cours/projets\n` +
-                `📚 Entraide et partage de cours\n` +
-                `🎮 Détente entre les cours\n\n` +
-                `Bienvenue dans votre groupe de semestre ! 🎓`
+                `🔓 Vous avez maintenant accès aux salons généraux du serveur\n\n` +
+                '**Accès disponibles :**\n' +
+                '💬 Discussions générales et gossip\n' +
+                '🔊 Salons vocaux pour les cours/projets\n' +
+                '📚 Entraide et partage de cours\n' +
+                '🎮 Détente entre les cours\n\n' +
+                'Bienvenue dans votre groupe de semestre ! 🎓'
             )
             .setColor(Colors.Gold)
             .setFooter({ text: 'Hotaru - BUT Informatique' })
             .setTimestamp();
 
-        return { embeds: [embed] };
+        const result: { embeds: EmbedBuilder[]; components?: ActionRowBuilder<ButtonBuilder>[] } = { embeds: [embed] };
+
+        if (showClassButton) {
+            const row = new ActionRowBuilder<ButtonBuilder>()
+                .addComponents(
+                    new ButtonBuilder()
+                        .setCustomId('class_choose')
+                        .setLabel('📚 Choisir ma classe')
+                        .setStyle(ButtonStyle.Primary)
+                );
+            result.components = [row];
+        }
+
+        return result;
     }
 
     /**

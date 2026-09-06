@@ -1,6 +1,7 @@
 import {
     PermissionFlagsBits,
     ApplicationCommandType,
+    ApplicationCommandOptionType,
     TextChannel,
     Colors,
     EmbedBuilder,
@@ -53,7 +54,18 @@ export default new ApplicationCommand({
         type: ApplicationCommandType.ChatInput,
         defaultMemberPermissions: PermissionFlagsBits.Administrator,
         dmPermission: false,
-        options: []
+        options: [
+            {
+                name: 'mode',
+                description: 'Mode de configuration : standard (un groupe) ou promo (toute la promotion, groupes A–N)',
+                type: ApplicationCommandOptionType.String,
+                required: false,
+                choices: [
+                    { name: 'Standard (un groupe)', value: 'standard' },
+                    { name: 'Promotion (groupes A–N)', value: 'promo' }
+                ]
+            }
+        ]
     },
 
     options: {
@@ -96,10 +108,18 @@ export default new ApplicationCommand({
         const guild = interaction.guild;
         const setupManager = new SetupManager(client, guild);
 
+        const mode = interaction.options.getString('mode') ?? 'standard';
+        const isPromo = mode === 'promo';
+        const totalSteps = isPromo ? 8 : 7;
+        const saveStep = isPromo ? 5 : 4;
+        const envStep = isPromo ? 6 : 5;
+        const permStep = isPromo ? 7 : 6;
+        const finalStep = isPromo ? 8 : 7;
+
         try {
             // Étape 1 : Créer les rôles (7 rôles)
             await interaction.editReply(
-                SetupMessages.createProgressMessage(1, 7, 'Création des rôles...', 'in-progress')
+                SetupMessages.createProgressMessage(1, totalSteps, 'Création des rôles...', 'in-progress')
             );
 
             const rolesResult = await setupManager.createRoles();
@@ -108,7 +128,7 @@ export default new ApplicationCommand({
             }
 
             await interaction.editReply(
-                SetupMessages.createProgressMessage(1, 7, 'Rôles créés avec succès', 'completed')
+                SetupMessages.createProgressMessage(1, totalSteps, 'Rôles créés avec succès', 'completed')
             );
 
             // Attendre un peu pour éviter le rate limit
@@ -116,7 +136,7 @@ export default new ApplicationCommand({
 
             // Étape 2 : Créer les catégories et salons (avec réutilisation intelligente)
             await interaction.editReply(
-                SetupMessages.createProgressMessage(2, 7, 'Analyse et configuration des catégories et salons...', 'in-progress')
+                SetupMessages.createProgressMessage(2, totalSteps, 'Analyse et configuration des catégories et salons...', 'in-progress')
             );
 
             const channelsResult = await setupManager.createCategoriesAndChannels();
@@ -151,7 +171,7 @@ export default new ApplicationCommand({
 
             // Étape 3 : Envoyer les messages interactifs
             await interaction.editReply(
-                SetupMessages.createProgressMessage(3, 7, 'Envoi des messages interactifs...', 'in-progress')
+                SetupMessages.createProgressMessage(3, totalSteps, 'Envoi des messages interactifs...', 'in-progress')
             );
 
             const setupData = setupManager.getSetupData();
@@ -195,14 +215,56 @@ export default new ApplicationCommand({
             setupData.messages = messages as any;
 
             await interaction.editReply(
-                SetupMessages.createProgressMessage(3, 7, 'Messages envoyés avec succès', 'completed')
+                SetupMessages.createProgressMessage(3, totalSteps, 'Messages envoyés avec succès', 'completed')
             );
 
             await new Promise(resolve => setTimeout(resolve, 1500));
 
-            // Étape 4 : Sauvegarder dans la base de données
+            // Étape 4 (mode promo) : Créer les groupes de promotion
+            if (isPromo) {
+                await interaction.editReply(
+                    SetupMessages.createProgressMessage(4, totalSteps, 'Création des groupes de promo (A–N)...', 'in-progress')
+                );
+
+                const promoResult = await setupManager.createPromoGroups();
+                if (!promoResult.success) {
+                    throw new Error(promoResult.message);
+                }
+
+                const promoData = setupManager.getSetupData().promo;
+                if (!promoData) {
+                    throw new Error('Les données des groupes de promo sont manquantes');
+                }
+
+                // Générer le lien d'invitation permanent
+                const inviteLink = await setupManager.generateInviteLink();
+                if (inviteLink) {
+                    promoData.inviteLink = inviteLink;
+                }
+
+                // Envoyer le panneau de sélection de classe dans le salon des rôles
+                const rolesChannelId = setupManager.getSetupData().channels?.roles;
+                const promoRolesChannel = rolesChannelId
+                    ? guild.channels.cache.get(rolesChannelId) as TextChannel | undefined
+                    : undefined;
+
+                if (promoRolesChannel) {
+                    const panel = SetupMessages.createPromoPanel([]);
+                    const promoMsg = await promoRolesChannel.send(panel);
+                    const currentMessages = setupManager.getSetupData().messages as Record<string, string | undefined>;
+                    currentMessages.promoPanel = promoMsg.id;
+                }
+
+                await interaction.editReply(
+                    SetupMessages.createProgressMessage(4, totalSteps, 'Groupes de promo créés', 'completed')
+                );
+
+                await new Promise(resolve => setTimeout(resolve, 1500));
+            }
+
+            // Étape 5 : Sauvegarder dans la base de données
             await interaction.editReply(
-                SetupMessages.createProgressMessage(4, 7, 'Sauvegarde de la configuration...', 'in-progress')
+                SetupMessages.createProgressMessage(saveStep, totalSteps, 'Sauvegarde de la configuration...', 'in-progress')
             );
 
             const saveResult = await setupManager.saveToDatabase();
@@ -211,46 +273,54 @@ export default new ApplicationCommand({
             }
 
             await interaction.editReply(
-                SetupMessages.createProgressMessage(4, 7, 'Configuration sauvegardée', 'completed')
+                SetupMessages.createProgressMessage(saveStep, totalSteps, 'Configuration sauvegardée', 'completed')
             );
 
             await new Promise(resolve => setTimeout(resolve, 1500));
 
             // Étape 5 : Générer le fichier .env (simulation)
             await interaction.editReply(
-                SetupMessages.createProgressMessage(5, 7, 'Génération des identifiants...', 'in-progress')
+                SetupMessages.createProgressMessage(envStep, totalSteps, 'Génération des identifiants...', 'in-progress')
             );
 
             const envConfig = generateEnvConfig(setupData as any);
 
             await interaction.editReply(
-                SetupMessages.createProgressMessage(5, 7, 'Identifiants générés', 'completed')
+                SetupMessages.createProgressMessage(envStep, totalSteps, 'Identifiants générés', 'completed')
             );
 
             await new Promise(resolve => setTimeout(resolve, 1500));
 
             // Étape 6 : Configuration des permissions
             await interaction.editReply(
-                SetupMessages.createProgressMessage(6, 7, 'Configuration des permissions...', 'in-progress')
+                SetupMessages.createProgressMessage(permStep, totalSteps, 'Configuration des permissions...', 'in-progress')
             );
 
             // Les permissions sont déjà configurées lors de la création
             await new Promise(resolve => setTimeout(resolve, 1000));
 
             await interaction.editReply(
-                SetupMessages.createProgressMessage(6, 7, 'Permissions configurées', 'completed')
+                SetupMessages.createProgressMessage(permStep, totalSteps, 'Permissions configurées', 'completed')
             );
 
             await new Promise(resolve => setTimeout(resolve, 1500));
 
             // Étape 7 : Finalisation
             await interaction.editReply(
-                SetupMessages.createProgressMessage(7, 7, 'Finalisation...', 'in-progress')
+                SetupMessages.createProgressMessage(finalStep, totalSteps, 'Finalisation...', 'in-progress')
             );
 
             await new Promise(resolve => setTimeout(resolve, 1000));
 
             // Message de confirmation final
+            const promoInfo = isPromo && setupData.promo
+                ? `\n🎓 **Mode promotion activé :** ${setupData.promo.groupKeys.length} groupes (A–N) créés\n` +
+                  '📢 Utilisez `/group reveal <lettre>` pour dévoiler les groupes progressivement.\n' +
+                  (setupData.promo.inviteLink
+                      ? `🔗 **Lien d'invitation de la promo :** ${setupData.promo.inviteLink}\n`
+                      : '')
+                : '';
+
             const finalEmbed = new EmbedBuilder()
                 .setTitle('✅ Configuration terminée !')
                 .setDescription(
@@ -259,8 +329,9 @@ export default new ApplicationCommand({
                     `🎭 **Rôles créés :** ${Object.keys(setupData.roles || {}).length}\n` +
                     `📁 **Catégories créées :** ${Object.keys(setupData.categories || {}).length}\n` +
                     `💬 **Salons créés :** ${Object.keys(setupData.channels || {}).length}\n` +
-                    `📨 **Messages interactifs :** ${Object.keys(setupData.messages || {}).length}\n\n` +
-                    '**Configuration enregistrée dans la base de données.**\n\n' +
+                    `📨 **Messages interactifs :** ${Object.keys(setupData.messages || {}).length}\n` +
+                    promoInfo +
+                    '\n**Configuration enregistrée dans la base de données.**\n\n' +
                     '**Identifiants pour le fichier .env :**\n' +
                     '```env\n' + envConfig + '\n```\n' +
                     '⚠️ **Important :** Copiez ces identifiants dans votre fichier `.env` pour configurer les fonctionnalités avancées.'

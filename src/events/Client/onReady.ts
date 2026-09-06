@@ -1,5 +1,8 @@
-import { success } from '../../utils/Console.js';
+import { success, error } from '../../utils/Console.js';
 import { Event } from '../../structure/Event.js';
+import { SetupManager } from '../../utils/SetupManager.js';
+
+const PROMO_CHECK_INTERVAL_MS = 60_000;
 
 export default new Event({
     event: 'clientReady',
@@ -29,5 +32,12 @@ export default new Event({
         if (__client__.agendaManager) {
             __client__.agendaManager.start();
         }
+
+        // Déblocage progressif des salons des groupes de promo
+        setInterval(() => {
+            SetupManager.checkProgress(__client__).catch((err) => {
+                error(`Erreur lors du check progressif promo: ${err}`);
+            });
+        }, PROMO_CHECK_INTERVAL_MS);
     }
 }).toJSON();

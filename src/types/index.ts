@@ -23,7 +23,9 @@ export type {
     UsefulLink,
     RoleKey,
     CategoryKey,
-    ChannelKey
+    ChannelKey,
+    PromoGroup,
+    PromoConfig
 } from './setup.js';
 export type {
     VerificationCode,

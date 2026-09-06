@@ -95,7 +95,9 @@ export interface SetupData {
         liensUtiles: string;
         support: string;
         panelControle: string;
+        promoPanel?: string;
     };
+    promo?: PromoConfig;
 }
 export interface SetupProgress {
     currentStep: number;
@@ -114,6 +116,27 @@ export interface UsefulLink {
     description: string;
     url: string;
     emoji?: string;
+}
+export interface PromoGroup {
+    key: string;
+    name: string;
+    roleId: string;
+    categoryId: string;
+    channels: Record<string, string>;
+    revealed: boolean;
+    revealedAt: number;
+    channelRevealOrder: string[];
+    unlockedChannels: string[];
+}
+export interface PromoConfig {
+    mode: boolean;
+    inviteLink?: string;
+    groups: Record<string, PromoGroup>;
+    groupKeys: string[];
+    progressiveReveal: {
+        enabled: boolean;
+        intervalDays: number;
+    };
 }
 export type RoleKey = keyof SetupData['roles'];
 export type CategoryKey = keyof SetupData['categories'];

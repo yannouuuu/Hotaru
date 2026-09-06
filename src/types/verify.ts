@@ -14,6 +14,7 @@ export interface VerifiedUser {
     verifiedAt: number;
     verifiedBy: 'email' | 'manual';
     verifierUserId?: string;
+    groupId?: string;
 }
 export interface VerificationAttempt {
     userId: string;
