@@ -3,6 +3,7 @@ import { MessageFlags } from 'discord.js';
 import { Component } from '../../structure/Component.js';
 import { VerificationManager } from '../../utils/VerificationManager.js';
 import { VerificationMessages } from '../../utils/VerificationMessages.js';
+import { buildVerificationConfig, readVerificationSetup } from '../../utils/verification-config.js';
 
 export default new Component({
     customId: 'verify_email_modal',
@@ -18,9 +19,16 @@ export default new Component({
         // Différer la réponse car l'envoi d'email peut prendre du temps
         await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
 
-        // Récupérer la configuration
-        const verificationConfig = client.database.get('verification_config');
-        if (!verificationConfig) {
+        const setupLookup = readVerificationSetup(client.database, interaction.guildId);
+        console.log('[verification] setup lookup (verify_email_modal):', {
+            guildId: interaction.guildId,
+            key: setupLookup.setupKey,
+            exists: setupLookup.exists,
+            hasVerifiedRole: setupLookup.hasVerifiedRole,
+            hasVerificationChannel: setupLookup.hasVerificationChannel
+        });
+
+        if (!setupLookup.hasVerifiedRole) {
             await interaction.editReply(
                 VerificationMessages.createErrorMessage(
                     '❌ Configuration manquante',
@@ -30,7 +38,7 @@ export default new Component({
             return;
         }
 
-        // Créer le gestionnaire de vérification
+        const verificationConfig = buildVerificationConfig(client.database, setupLookup.setupData);
         const verificationManager = new VerificationManager(client.database, verificationConfig);
 
         // Demander un code de vérification

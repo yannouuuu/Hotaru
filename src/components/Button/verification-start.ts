@@ -7,6 +7,7 @@ import {
 } from 'discord.js';
 import { Component } from '../../structure/Component.js';
 import type { DiscordBot } from '../../client/DiscordBot.js';
+import { readVerificationSetup } from '../../utils/verification-config.js';
 
 export default new Component({
     customId: 'verification-start',
@@ -16,9 +17,17 @@ export default new Component({
         if (!interaction.isButton()) return;
         if (!interaction.inCachedGuild()) return;
 
-        // Vérifier si l'utilisateur est déjà vérifié
-        const setupData = client.database.get(`setup_${interaction.guildId}`);
-        if (!setupData?.roles?.verifie) {
+        const setupLookup = readVerificationSetup(client.database, interaction.guildId);
+        console.log('[verification] setup lookup (verification-start):', {
+            guildId: interaction.guildId,
+            key: setupLookup.setupKey,
+            exists: setupLookup.exists,
+            hasVerifiedRole: setupLookup.hasVerifiedRole,
+            hasVerificationChannel: setupLookup.hasVerificationChannel
+        });
+
+        const verifiedRoleId = setupLookup.setupData?.roles?.verifie;
+        if (!verifiedRoleId) {
             await interaction.reply({
                 content: '❌ La vérification n\'est pas configurée sur ce serveur.',
                 flags: [MessageFlags.Ephemeral]
@@ -27,7 +36,7 @@ export default new Component({
         }
 
         const member = interaction.member;
-        if (member.roles.cache.has(setupData.roles.verifie)) {
+        if (member.roles.cache.has(verifiedRoleId)) {
             await interaction.reply({
                 content: '✅ Vous êtes déjà vérifié(e) !',
                 flags: [MessageFlags.Ephemeral]
