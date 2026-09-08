@@ -28,7 +28,7 @@ export class SetupMessages {
             .setTimestamp();
 
         const button = new ButtonBuilder()
-            .setCustomId('verification_start')
+            .setCustomId('verification-start')
             .setLabel('🎓 Commencer la vérification')
             .setStyle(ButtonStyle.Primary);
 

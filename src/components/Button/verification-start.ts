@@ -9,7 +9,7 @@ import { Component } from '../../structure/Component.js';
 import type { DiscordBot } from '../../client/DiscordBot.js';
 
 export default new Component({
-    customId: 'verification_start',
+    customId: 'verification-start',
     type: 'button',
     
     run: async (client: DiscordBot, interaction) => {
